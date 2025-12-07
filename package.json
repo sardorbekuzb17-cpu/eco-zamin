@@ -1,0 +1,41 @@
+{
+    "name": "greenmarket-lib",
+    "version": "1.0.0",
+    "description": "GreenMarket e-commerce platform - Optimized library",
+    "main": "src/GreenMarketLib.js",
+    "type": "module",
+    "scripts": {
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage",
+        "build": "node build.js",
+        "dev": "node -r esm src/GreenMarketLib.js",
+        "lint": "eslint src/**/*.js"
+    },
+    "keywords": [
+        "e-commerce",
+        "green",
+        "trees",
+        "library",
+        "performance",
+        "lazy-loading",
+        "virtual-scrolling"
+    ],
+    "author": "GreenMarket Team",
+    "license": "MIT",
+    "devDependencies": {
+        "fast-check": "^3.15.0",
+        "jest": "^29.7.0",
+        "jest-environment-jsdom": "^30.2.0",
+        "jsdom": "^27.2.0",
+        "terser": "^5.16.0",
+        "eslint": "^8.0.0"
+    },
+    "exports": {
+        ".": "./src/GreenMarketLib.js",
+        "./models/*": "./src/models/*.js",
+        "./services/*": "./src/services/*.js",
+        "./utils/*": "./src/utils/*.js",
+        "./i18n": "./src/i18n/i18n.js"
+    }
+}

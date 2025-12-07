@@ -1,0 +1,190 @@
+{
+    "title": "GreenMarket - Digital Platform for a Green Future",
+    "header": {
+        "home": "Home",
+        "greenShop": "Green Shop",
+        "kitchenGarden": "Kitchen Garden",
+        "catalog": "Product Catalog",
+        "sadaqah": "Green Fund",
+        "seasonalTips": "Seasonal Reminder",
+        "neighborhoodRating": "Neighborhood Rating",
+        "greenCredit": "Credit & Insurance",
+        "kidsZone": "Kids Zone",
+        "greenNews": "News",
+        "howItWorks": "How It Works",
+        "aiAdvisor": "AI Advisor",
+        "orders": "My Orders",
+        "contact": "Contact"
+    },
+    "hero": {
+        "title": "Building a green future",
+        "subtitle": "together starting today.",
+        "description": "GreenMarket is a digital platform that makes tree planting easy, helps you contribute to nature, and encourages environmental responsibility.",
+        "viewProducts": "View Products"
+    },
+    "greenShop": {
+        "title": "Green Shop",
+        "subtitle": "Everything you need to care for nature in one place",
+        "trees": "Trees",
+        "seedlings": "Seedlings",
+        "seeds": "Seeds",
+        "pots": "Pots",
+        "fertilizers": "Fertilizers",
+        "decor": "Decor & Accessories",
+        "addToCart": "Add to Cart"
+    },
+    "products": {
+        "appleTree": {
+            "name": "Apple Tree",
+            "desc": "Fruit tree, high yield",
+            "price": "50,000 sum"
+        },
+        "pearTree": {
+            "name": "Pear Tree",
+            "desc": "Sweet fruit tree",
+            "price": "40,000 sum"
+        },
+        "apricotTree": {
+            "name": "Apricot Tree",
+            "desc": "Delicious fruit tree",
+            "price": "30,000 sum"
+        },
+        "cherryTree": {
+            "name": "Cherry Tree",
+            "desc": "Tasty fruit tree",
+            "price": "30,000 sum"
+        },
+        "tomatoSeedling": {
+            "name": "Tomato Seedling",
+            "desc": "High yield variety",
+            "price": "5,000 sum"
+        },
+        "cucumberSeedling": {
+            "name": "Cucumber Seedling",
+            "desc": "Fast growing",
+            "price": "4,000 sum"
+        },
+        "pepperSeedling": {
+            "name": "Pepper Seedling",
+            "desc": "Sweet pepper",
+            "price": "6,000 sum"
+        },
+        "eggplantSeedling": {
+            "name": "Eggplant Seedling",
+            "desc": "Large fruit",
+            "price": "5,500 sum"
+        },
+        "carrotSeed": {
+            "name": "Carrot Seeds",
+            "desc": "Fast growing",
+            "price": "3,000 sum"
+        },
+        "onionSeed": {
+            "name": "Onion Seeds",
+            "desc": "High yield",
+            "price": "2,500 sum"
+        },
+        "flowerSeed": {
+            "name": "Flower Seeds (mixed)",
+            "desc": "Colorful flowers",
+            "price": "8,000 sum"
+        },
+        "grassSeed": {
+            "name": "Lawn Grass Seeds",
+            "desc": "Green lawn",
+            "price": "15,000 sum"
+        },
+        "smallPot": {
+            "name": "Plastic Pot (small)",
+            "desc": "15cm diameter",
+            "price": "8,000 sum"
+        },
+        "mediumPot": {
+            "name": "Plastic Pot (medium)",
+            "desc": "25cm diameter",
+            "price": "15,000 sum"
+        },
+        "clayPot": {
+            "name": "Clay Pot",
+            "desc": "Beautiful design",
+            "price": "35,000 sum"
+        },
+        "hangingPot": {
+            "name": "Hanging Pot",
+            "desc": "With chain",
+            "price": "45,000 sum"
+        },
+        "organicFertilizer": {
+            "name": "Organic Fertilizer (1kg)",
+            "desc": "Natural, safe",
+            "price": "12,000 sum"
+        },
+        "mineralFertilizer": {
+            "name": "Mineral Fertilizer (500g)",
+            "desc": "NPK complex",
+            "price": "18,000 sum"
+        },
+        "liquidFertilizer": {
+            "name": "Liquid Fertilizer (1L)",
+            "desc": "Fast acting",
+            "price": "25,000 sum"
+        },
+        "compost": {
+            "name": "Compost (5kg)",
+            "desc": "Ready to use",
+            "price": "20,000 sum"
+        },
+        "decorStones": {
+            "name": "Decorative Stones (1kg)",
+            "desc": "Colored stones",
+            "price": "10,000 sum"
+        },
+        "plantLabels": {
+            "name": "Plant Labels (10pcs)",
+            "desc": "Plastic labels",
+            "price": "5,000 sum"
+        },
+        "wateringCan": {
+            "name": "Watering Can",
+            "desc": "2L capacity",
+            "price": "22,000 sum"
+        },
+        "gardenScissors": {
+            "name": "Garden Scissors",
+            "desc": "Sharp, ergonomic",
+            "price": "35,000 sum"
+        }
+    },
+    "kitchenGarden": {
+        "title": "Kitchen Garden",
+        "subtitle": "Basil, dill, mint - always fresh herbs in your kitchen!",
+        "suitablePlants": "Plants suitable for kitchen",
+        "withRecipe": "Add to Cart + Recipe",
+        "todaysCooking": "What are we cooking today?",
+        "recipeDescription": "Choose a recipe, necessary herbs will be automatically added to cart!",
+        "viewAllRecipes": "View all recipes (50+)",
+        "kitchenSet": "Kitchen Garden Set",
+        "getSet": "Get the Set",
+        "tips": "Tips for kitchen garden"
+    },
+    "catalog": {
+        "title": "Product Catalog",
+        "subtitle": "Some plant types suitable for your area.",
+        "searchPlaceholder": "Enter product name...",
+        "minPrice": "Minimum price (sum)",
+        "maxPrice": "Maximum price (sum)",
+        "productType": "Product type",
+        "all": "All",
+        "tree": "Tree",
+        "fruit": "Fruit",
+        "bush": "Bush",
+        "clear": "Clear",
+        "noResults": "No results found",
+        "tryAgain": "Try another search term or filters"
+    },
+    "footer": {
+        "copyright": "© 2025 GreenMarket. All rights reserved."
+    },
+    "langName": "English",
+    "langFlag": "🇬🇧"
+}

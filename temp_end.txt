@@ -1,0 +1,100 @@
+﻿                    basilRecipe: "Pilaf, soup, salad"
+                },
+                catalog: {
+                    chinorName: "Plane Tree",
+                    chinorDesc: "This tree grows fast, has dense shade and is very effective in air purification.",
+                    chinorPrice: "Price: 150,000 sum",
+                    olmaName: "Apple Tree",
+                    olmaDesc: "Fruit-bearing tree. Purifies air and beautifies your garden.",
+                    olmaPrice: "Price: 120,000 sum",
+                    atirgulName: "Rose Bush",
+                    atirgulDesc: "Rose bush that beautifies gardens and yards, easy to care for.",
+                    atirgulPrice: "Price: 45,000 sum",
+                    addToCart: "Add to Cart"
+                },
+                sadaqahHadith: {
+                    text: "If a Muslim plants a tree or sows a crop, and a person, bird or animal eats from it, it will be charity for him",
+                    source: "Hadith Sharif (Bukhari and Muslim)"
+                }
+            }
+        };
+    </script>
+</body>
+</html>
+
+    <script>
+        const translations = {
+            uz: {
+                greenShop: { seedlings: "рџЊ± Ko'chatlar" },
+                sadaqah: { title: "Yashil Jamg'arma рџЊі", subtitle: "Duo uchun daraxt eking - Sadaqai Joriya" },
+                kitchen: {
+                    basilName: "Rayhon ko'chati",
+                    basilDesc: "Kichik idishda, oshxonaga mos",
+                    dillName: "Ukrop ko'chati",
+                    dillDesc: "Tez o'sadigan, oshxona uchun",
+                    recipeLabel: "рџ‘ЁрџЌі Retsept:",
+                    basilRecipe: "Palov, sho'rva, salat"
+                }
+            },
+            ru: {
+                greenShop: { seedlings: "рџЊ± РЎР°Р¶РµРЅС†С‹" },
+                sadaqah: { title: "Р—РµР»РµРЅС‹Р№ С„РѕРЅРґ рџЊі", subtitle: "РџРѕСЃР°РґРёС‚Рµ РґРµСЂРµРІРѕ РґР»СЏ СѓРјРµСЂС€РµРіРѕ - РЎР°РґР°РєР° Р”Р¶Р°СЂРёР№Р°" },
+                kitchen: {
+                    basilName: "РЎР°Р¶РµРЅРµС† Р±Р°Р·РёР»РёРєР°",
+                    basilDesc: "Р’ РјР°Р»РµРЅСЊРєРѕРј РіРѕСЂС€РєРµ, РїРѕРґС…РѕРґРёС‚ РґР»СЏ РєСѓС…РЅРё",
+                    dillName: "РЎР°Р¶РµРЅРµС† СѓРєСЂРѕРїР°",
+                    dillDesc: "Р‘С‹СЃС‚СЂРѕСЂР°СЃС‚СѓС‰РёР№, РґР»СЏ РєСѓС…РЅРё",
+                    recipeLabel: "рџ‘ЁрџЌі Р РµС†РµРїС‚:",
+                    basilRecipe: "РџР»РѕРІ, СЃСѓРї, СЃР°Р»Р°С‚"
+                }
+            },
+            en: {
+                greenShop: { seedlings: "рџЊ± Seedlings" },
+                sadaqah: { title: "Green Fund рџЊі", subtitle: "Plant a tree for the deceased - Sadaqah Jariyah" },
+                kitchen: {
+                    basilName: "Basil Seedling",
+                    basilDesc: "In a small pot, perfect for kitchen",
+                    dillName: "Dill Seedling",
+                    dillDesc: "Fast-growing, for kitchen",
+                    recipeLabel: "рџ‘ЁрџЌі Recipe:",
+                    basilRecipe: "Pilaf, soup, salad"
+                }
+            }
+        };
+        function changeLanguage(lang) {
+            localStorage.setItem('selectedLanguage', lang);
+            document.documentElement.lang = lang;
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                if (btn.getAttribute('data-lang') === lang) {
+                    btn.style.setProperty('background-color', '#16a34a', 'important');
+                    btn.style.setProperty('color', 'white', 'important');
+                } else {
+                    btn.style.setProperty('background-color', '#e2e8f0', 'important');
+                    btn.style.setProperty('color', '#475569', 'important');
+                }
+            });
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                const keys = key.split('.');
+                let value = translations[lang];
+                for (let k of keys) {
+                    value = value?.[k];
+                }
+                if (value) element.textContent = value;
+            });
+        }
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedLang = localStorage.getItem('selectedLanguage') || 'uz';
+            changeLanguage(savedLang);
+        });
+        
+        // Sahifa to'liq yuklangandan keyin ham ishga tushirish
+        window.addEventListener('load', () => {
+            const savedLang = localStorage.getItem('selectedLanguage') || 'uz';
+            changeLanguage(savedLang);
+        });
+    </script>
+
+</body>
+
+</html>

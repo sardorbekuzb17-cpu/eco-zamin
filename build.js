@@ -1,9 +1,13 @@
 /**
  * Build script - Production uchun minify qilish
  */
-const fs = require('fs');
-const path = require('path');
-const { minify } = require('terser');
+import fs from 'fs';
+import path from 'path';
+import { minify } from 'terser';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function buildMinified() {
     console.log('🔨 Build boshlandi...');

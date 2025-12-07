@@ -1,0 +1,360 @@
+/* AI Hero */
+.ai-hero {
+    padding: 150px 0 80px;
+    background: linear-gradient(135deg, #7000FF 0%, #A855F7 100%);
+    text-align: center;
+    color: white;
+}
+
+.ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 50px;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.ai-hero h1 {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+}
+
+.ai-hero p {
+    font-size: 1.25rem;
+    opacity: 0.9;
+}
+
+/* AI Section */
+.ai-section {
+    padding: 80px 0;
+    background: #f9fafb;
+}
+
+.ai-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Quick Suggestions */
+.quick-suggestions {
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.quick-suggestions h3 {
+    font-size: 1.25rem;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+}
+
+.suggestions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.suggestion-btn {
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(112, 0, 255, 0.05), rgba(168, 85, 247, 0.05));
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.suggestion-btn:hover {
+    border-color: #7000FF;
+    background: linear-gradient(135deg, rgba(112, 0, 255, 0.1), rgba(168, 85, 247, 0.1));
+    transform: translateY(-2px);
+}
+
+.suggestion-btn i {
+    font-size: 1.5rem;
+    color: #7000FF;
+}
+
+/* Chat Container */
+.chat-container {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.chat-header {
+    background: linear-gradient(135deg, #7000FF, #A855F7);
+    color: white;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.ai-avatar {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.chat-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Chat Messages */
+.chat-messages {
+    height: 500px;
+    overflow-y: auto;
+    padding: 2rem;
+    background: #f9fafb;
+}
+
+.message {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.25rem;
+}
+
+.ai-message .message-avatar {
+    background: linear-gradient(135deg, #7000FF, #A855F7);
+    color: white;
+}
+
+.user-message {
+    flex-direction: row-reverse;
+}
+
+.user-message .message-avatar {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.message-content {
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 16px;
+    max-width: 70%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.user-message .message-content {
+    background: linear-gradient(135deg, #7000FF, #A855F7);
+    color: white;
+}
+
+.message-content p {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
+.product-recommendation {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+    padding: 1rem;
+    border-radius: 12px;
+    margin-top: 1rem;
+    border-left: 4px solid #10b981;
+}
+
+.product-recommendation h4 {
+    color: #059669;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.product-recommendation p {
+    color: #374151;
+    font-size: 0.95rem;
+}
+
+.product-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #10b981;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.product-link:hover {
+    background: #059669;
+    transform: translateX(5px);
+}
+
+/* Chat Input */
+.chat-input-container {
+    display: flex;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: white;
+    border-top: 2px solid #f3f4f6;
+}
+
+.chat-input {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: border-color 0.3s ease;
+}
+
+.chat-input:focus {
+    outline: none;
+    border-color: #7000FF;
+}
+
+.send-btn {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #7000FF, #A855F7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.25rem;
+    transition: all 0.3s ease;
+}
+
+.send-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 10px 15px -3px rgba(112, 0, 255, 0.3);
+}
+
+.send-btn:active {
+    transform: scale(0.95);
+}
+
+/* Typing Indicator */
+.typing-indicator {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    background: #7000FF;
+    border-radius: 50%;
+    animation: typing 1.4s infinite;
+}
+
+.typing-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing {
+
+    0%,
+    60%,
+    100% {
+        transform: translateY(0);
+    }
+
+    30% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ai-hero h1 {
+        font-size: 2.5rem;
+    }
+
+    .suggestions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .chat-messages {
+        height: 400px;
+    }
+
+    .message-content {
+        max-width: 85%;
+    }
+}

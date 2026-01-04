@@ -263,21 +263,51 @@
             }
         }
 
-        /* Til tanlash tugmalari */
-        .lang-btn {
-            color: #64748b;
-            transition: all 0.3s;
+        /* Til tanlash tugmalari - Radio style */
+        .radio-input {
+            background-color: #fff;
+            padding: 8px 12px;
+            border-radius: 20px;
+            display: flex;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
         }
 
-        .lang-btn.active {
-            background-color: #16a34a;
+        .radio-input input[type="radio"] {
+            display: none;
+        }
+
+        .radio-input input[type="radio"]+label {
+            color: #333;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+
+        .radio-input input[type="radio"]+label span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            margin: 0 2px;
+            vertical-align: middle;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.33);
+            background-color: #b0b0b0;
             color: white;
-            font-weight: 600;
+            font-weight: bold;
+            font-size: 11px;
+            transition: all 0.3s ease;
         }
 
-        .lang-btn:hover:not(.active) {
-            background-color: #f0fdf4;
-            color: #16a34a;
+        .radio-input input[type="radio"]:checked+label span {
+            background-color: #16a34a;
+            transform: scale(1.1);
+        }
+
+        .radio-input input[type="radio"]+label span:hover {
+            transform: scale(1.05);
         }
 
         /* Menu animatsiyalari */
@@ -481,16 +511,15 @@
             <!-- Desktop navigatsiya yashirildi, faqat hamburger menyu ishlatiladi -->
             <div class="flex items-center gap-3">
                 <!-- Til tugmalari -->
-                <div class="flex gap-1">
-                    <button onclick="changeLanguage('uz');" data-lang="uz"
-                        class="lang-btn px-2 py-1 rounded text-xs font-medium transition-colors"
-                        style="background-color: #16a34a !important; color: white !important;">UZ</button>
-                    <button onclick="changeLanguage('ru');" data-lang="ru"
-                        class="lang-btn px-2 py-1 rounded text-xs font-medium transition-colors"
-                        style="background-color: #e2e8f0 !important; color: #475569 !important;">RU</button>
-                    <button onclick="changeLanguage('en');" data-lang="en"
-                        class="lang-btn px-2 py-1 rounded text-xs font-medium transition-colors"
-                        style="background-color: #e2e8f0 !important; color: #475569 !important;">EN</button>
+                <div class="radio-input">
+                    <input type="radio" id="lang-uz" name="language" value="uz" checked onchange="changeLanguage('uz')">
+                    <label for="lang-uz"><span>UZ</span></label>
+
+                    <input type="radio" id="lang-ru" name="language" value="ru" onchange="changeLanguage('ru')">
+                    <label for="lang-ru"><span>RU</span></label>
+
+                    <input type="radio" id="lang-en" name="language" value="en" onchange="changeLanguage('en')">
+                    <label for="lang-en"><span>EN</span></label>
                 </div>
                 <button id="cart-icon-btn"
                     class="relative p-2 rounded-md hover:bg-green-50 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -544,46 +573,40 @@
             <nav class="p-3 overflow-y-auto relative z-10" style="max-height: calc(100vh - 120px);" role="navigation">
                 <a href="#home"
                     class="nav-link flex items-center gap-3 py-3 px-3 rounded-lg text-slate-700 hover:bg-green-100 transition-colors mb-1"
-                    onclick="closeMenu()"><span>🏠</span> Bosh sahifa</a>
+                    onclick="closeMenu()"><span>🏠</span> <span data-i18n="nav.home">Bosh sahifa</span></a>
                 <a href="#green-shop"
                     class="nav-link flex items-center gap-3 py-3 px-3 rounded-lg text-slate-700 hover:bg-green-100 transition-colors mb-1"
-                    onclick="closeMenu()"><span>🌿</span> Yashil Do'kon</a>
+                    onclick="closeMenu()"><span>🌿</span> <span data-i18n="nav.greenShop">Yashil Do'kon</span></a>
                 <a href="#kitchen-garden"
                     class="nav-link flex items-center gap-3 py-3 px-3 rounded-lg text-slate-700 hover:bg-green-100 transition-colors mb-1"
-                    onclick="closeMenu()"><span>🍳</span> Oshxona Bog'i</a>
+                    onclick="closeMenu()"><span>🍳</span> <span data-i18n="nav.kitchenGarden">Oshxona Bog'i</span></a>
                 <a href="#catalog"
                     class="nav-link flex items-center gap-3 py-3 px-3 rounded-lg text-slate-700 hover:bg-green-100 transition-colors mb-1"
-                    onclick="closeMenu()"><span>📦</span> Katalog</a>
-                <a href="#sadaqah"
-                    class="nav-link flex items-center gap-3 py-3 px-3 rounded-lg text-slate-700 hover:bg-green-100 transition-colors mb-1"
-                    onclick="closeMenu()"><span>💚</span> Jamg'arma</a>
+                    onclick="closeMenu()"><span>📦</span> <span data-i18n="nav.catalog">Katalog</span></a>
                 <a href="#seasonal-tips"
                     class="nav-link flex items-center gap-3 py-3 px-3 rounded-lg text-slate-700 hover:bg-green-100 transition-colors mb-1"
-                    onclick="closeMenu()"><span>🗓️</span> Mavsumiy</a>
+                    onclick="closeMenu()"><span>🗓️</span> <span data-i18n="nav.seasonal">Mavsumiy</span></a>
                 <a href="#neighborhood-rating"
                     class="nav-link flex items-center gap-3 py-3 px-3 rounded-lg text-slate-700 hover:bg-green-100 transition-colors mb-1"
-                    onclick="closeMenu()"><span>⭐</span> Reyting</a>
+                    onclick="closeMenu()"><span>⭐</span> <span data-i18n="nav.rating">Reyting</span></a>
                 <a href="#green-credit"
                     class="nav-link flex items-center gap-3 py-3 px-3 rounded-lg text-slate-700 hover:bg-green-100 transition-colors mb-1"
-                    onclick="closeMenu()"><span>💳</span> Kredit</a>
-                <a href="#kids-zone"
-                    class="nav-link flex items-center gap-3 py-3 px-3 rounded-lg text-slate-700 hover:bg-green-100 transition-colors mb-1"
-                    onclick="closeMenu()"><span>👶</span> Bolalar</a>
+                    onclick="closeMenu()"><span>💳</span> <span data-i18n="nav.credit">Kredit</span></a>
                 <a href="#green-news"
                     class="nav-link flex items-center gap-3 py-3 px-3 rounded-lg text-slate-700 hover:bg-green-100 transition-colors mb-1"
-                    onclick="closeMenu()"><span>📰</span> Yangiliklar</a>
+                    onclick="closeMenu()"><span>📰</span> <span data-i18n="nav.news">Yangiliklar</span></a>
                 <a href="#how-it-works"
                     class="nav-link flex items-center gap-3 py-3 px-3 rounded-lg text-slate-700 hover:bg-green-100 transition-colors mb-1"
-                    onclick="closeMenu()"><span>❓</span> Qanday ishlaydi</a>
+                    onclick="closeMenu()"><span>❓</span> <span data-i18n="nav.howItWorks">Qanday ishlaydi</span></a>
                 <a href="#ai-advisor"
                     class="nav-link flex items-center gap-3 py-3 px-3 rounded-lg text-slate-700 hover:bg-green-100 transition-colors mb-1"
-                    onclick="closeMenu()"><span>🤖</span> AI Maslahatchi</a>
+                    onclick="closeMenu()"><span>🤖</span> <span data-i18n="nav.aiAdvisor">AI Maslahatchi</span></a>
                 <a href="#orders"
                     class="nav-link flex items-center gap-3 py-3 px-3 rounded-lg text-slate-700 hover:bg-green-100 transition-colors mb-1"
-                    onclick="closeMenu()"><span>📋</span> Buyurtmalar</a>
+                    onclick="closeMenu()"><span>📋</span> <span data-i18n="nav.orders">Buyurtmalar</span></a>
                 <a href="#contact"
                     class="nav-link flex items-center gap-3 py-3 px-3 rounded-lg text-slate-700 hover:bg-green-100 transition-colors mb-1"
-                    onclick="closeMenu()"><span>📞</span> Aloqa</a>
+                    onclick="closeMenu()"><span>📞</span> <span data-i18n="nav.contact">Aloqa</span></a>
             </nav>
         </div>
     </header>
@@ -641,17 +664,17 @@
             </div>
 
             <div class="text-center py-6 md:py-10">
-                <h1 class="text-4xl md:text-6xl font-extrabold text-slate-800 leading-tight">
-                    <span class="text-green-700">Yashil kelajakni</span> bugundan boshlab birga<br>quramiz.
+                <h1 class="text-4xl md:text-6xl font-extrabold text-slate-800 leading-tight" data-i18n="hero.title">
+                    Yashil kelajakni bugundan boshlab birga quramiz.
                 </h1>
-                <p class="mt-6 max-w-2xl mx-auto text-lg text-slate-500">
+                <p class="mt-6 max-w-2xl mx-auto text-lg text-slate-500" data-i18n="hero.subtitle">
                     GreenMarket - bu daraxt ekishni osonlashtiruvchi, tabiatga o'z hissangizni qo'shishga yordam
                     beruvchi va ekologik mas'uliyatni rag'batlantiruvchi raqamli platforma.
                 </p>
                 <div class="mt-10">
                     <a href="#catalog"
-                        class="bg-green-700 text-white font-bold px-8 py-4 rounded-lg text-lg hover:bg-green-800 transition-colors shadow-lg shadow-green-700/20">Mahsulotlarni
-                        ko'rish</a>
+                        class="bg-green-700 text-white font-bold px-8 py-4 rounded-lg text-lg hover:bg-green-800 transition-colors shadow-lg shadow-green-700/20"
+                        data-i18n="hero.viewProducts">Mahsulotlarni ko'rish</a>
                 </div>
             </div>
         </section>
@@ -659,29 +682,32 @@
         <!-- Yashil Do'kon sahifasi -->
         <section id="green-shop" class="py-16 md:py-24">
             <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Yashil Do'kon 🌿</h2>
-                <p class="mt-4 max-w-xl mx-auto text-slate-500">Tabiatga g'amxo'rlik qilish uchun barcha kerakli
-                    narsalar bir joyda</p>
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800" data-i18n="greenShop.title">Yashil Do'kon 🌿
+                </h2>
+                <p class="mt-4 max-w-xl mx-auto text-slate-500" data-i18n="greenShop.subtitle">Tabiatga g'amxo'rlik
+                    qilish uchun barcha kerakli narsalar bir joyda</p>
             </div>
             <!-- Daraxtlar bo'limi -->
             <div class="mt-8 max-w-6xl mx-auto">
-                <h3 class="text-2xl font-bold text-slate-800 mb-6">🌳 Daraxtlar</h3>
+                <h3 class="text-2xl font-bold text-slate-800 mb-6" data-i18n="greenShop.trees">🌳 Daraxtlar</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div class="stat-card p-4 rounded-xl border border-green-200">
                         <img src="images/olma1.jpg" alt="Olma daraxti" class="w-full h-40 object-cover rounded-lg mb-3"
                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <div class="bg-slate-100 h-40 rounded-lg mb-3 items-center justify-center text-5xl hidden">🍎
                         </div>
-                        <h4 class="font-bold mb-2">Olma daraxti</h4>
-                        <p class="text-sm text-slate-600 mb-2">Mevali daraxt, yuqori hosil</p>
-                        <p class="text-green-700 font-bold text-lg mb-2">50,000 so'm</p>
-                        <button
-                            class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">Savatga</button>
+                        <h4 class="font-bold mb-2" data-i18n="greenShop.appleTree">Olma daraxti</h4>
+                        <p class="text-sm text-slate-600 mb-2" data-i18n="greenShop.appleDesc">Mevali daraxt, yuqori
+                            hosil</p>
+                        <p class="text-green-700 font-bold text-lg mb-2">50,000 <span data-i18n="common.sum">so'm</span>
+                        </p>
+                        <button class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
+                            data-i18n="greenShop.addToCart">Savatga</button>
                     </div>
                     <div class="stat-card p-4 rounded-xl border border-green-200">
                         <img src="images/nok.jpg" alt="Nok daraxti" class="w-full h-40 object-cover rounded-lg mb-3"
                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="bg-slate-100 h-40 rounded-lg mb-3 items-center justify-center text-5xl hidden">�
+                        <div class="bg-slate-100 h-40 rounded-lg mb-3 items-center justify-center text-5xl hidden">🍐
                         </div>
                         <h4 class="font-bold mb-2">Nok daraxti</h4>
                         <p class="text-sm text-slate-600 mb-2">Shirin mevali daraxt</p>
@@ -936,18 +962,20 @@
             </div>
         </section>
 
-        <!-- Oshxona Bog'i sahifasi -->
-        <section id="kitchen-garden" class="py-16 md:py-24 bg-gradient-to-br from-lime-50 to-green-50">
+        <!-- Mahsulotlar katalogi sahifasi -->
+        <section id="catalog" class="py-16 md:py-24 bg-gradient-to-br from-lime-50 to-green-50">
             <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Oshxona Bog'i 🌿🍳</h2>
-                <p class="mt-4 max-w-xl mx-auto text-slate-500">Rayhon, ukrop, yalpiz - oshxonangizda doim yangi ko'kat!
-                </p>
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800" data-i18n="kitchen.title">Oshxona Bog'i 🌿🍳
+                </h2>
+                <p class="mt-4 max-w-xl mx-auto text-slate-500" data-i18n="kitchen.subtitle">Rayhon, ukrop, yalpiz -
+                    oshxonangizda doim yangi ko'kat!</p>
             </div>
 
             <div class="max-w-6xl mx-auto">
                 <!-- Oshxona o'simliklari -->
                 <div class="mb-12">
-                    <h3 class="text-2xl font-bold text-slate-800 mb-6">🪴 Oshxonaga mos o'simliklar</h3>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6" data-i18n="kitchen.plants">🪴 Oshxonaga mos
+                        o'simliklar</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <!-- Rayhon -->
                         <div class="stat-card p-4 rounded-xl border-2 border-green-300 bg-white">
@@ -1180,36 +1208,16 @@
                     </div>
                 </div>
 
-                <!-- Oshxona bog'i uchun maslahatlar -->
-                <div class="bg-white p-8 rounded-xl border border-green-200">
-                    <h3 class="text-2xl font-bold text-slate-800 mb-6 text-center">💡 Oshxona bog'i uchun maslahatlar
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="text-center p-4">
-                            <div class="text-4xl mb-3">☀️</div>
-                            <h4 class="font-bold mb-2">Yorug'lik</h4>
-                            <p class="text-sm text-slate-600">Deraza yoniga qo'ying, kuniga 4-6 soat yorug'lik kerak</p>
-                        </div>
-                        <div class="text-center p-4">
-                            <div class="text-4xl mb-3">💧</div>
-                            <h4 class="font-bold mb-2">Sug'orish</h4>
-                            <p class="text-sm text-slate-600">Tuproq quriganda sug'oring, ortiqcha suv bermaslik</p>
-                        </div>
-                        <div class="text-center p-4">
-                            <div class="text-4xl mb-3">✂️</div>
-                            <h4 class="font-bold mb-2">Yig'ish</h4>
-                            <p class="text-sm text-slate-600">Yuqori qismidan kesib oling, yangi novdalar o'sadi</p>
-                        </div>
-                    </div>
-                </div>
             </div>
         </section>
 
         <!-- Mahsulotlar katalogi sahifasi -->
         <section id="catalog" class="py-16 md:py-24 bg-green-50 rounded-2xl">
             <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Mahsulotlar katalogi 🌱</h2>
-                <p class="mt-4 max-w-xl mx-auto text-slate-500">Sizning hududingizga mos keladigan ba'zi o'simlik
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800" data-i18n="catalogSection.title">Mahsulotlar
+                    katalogi 🌱</h2>
+                <p class="mt-4 max-w-xl mx-auto text-slate-500" data-i18n="catalogSection.subtitle">Sizning hududingizga
+                    mos keladigan ba'zi o'simlik
                     turlari.</p>
             </div>
 
@@ -1219,7 +1227,8 @@
                 <div class="flex flex-col sm:flex-row gap-4">
                     <div class="flex-1">
                         <label for="search-input" class="sr-only">Mahsulotlarni qidirish</label>
-                        <input type="text" id="search-input" placeholder="Mahsulot nomini kiriting..."
+                        <input type="text" id="search-input" data-i18n-placeholder="catalogSection.searchPlaceholder"
+                            placeholder="Mahsulot nomini kiriting..."
                             class="w-full px-4 py-3 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
                             aria-label="Mahsulotlarni qidirish" role="searchbox">
                     </div>
@@ -1229,7 +1238,8 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <!-- Min Price -->
                     <div>
-                        <label for="min-price-input" class="block text-sm font-medium text-slate-700 mb-1">Minimal narx
+                        <label for="min-price-input" class="block text-sm font-medium text-slate-700 mb-1"
+                            data-i18n="catalogSection.minPrice">Minimal narx
                             (so'm)</label>
                         <input type="number" id="min-price-input" placeholder="0"
                             class="w-full px-4 py-2 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
@@ -1314,130 +1324,13 @@
             </div>
         </section>
 
-        <!-- Yashil Jamg'arma sahifasi -->
-        <section id="sadaqah" class="py-16 md:py-24 bg-green-50 rounded-2xl">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold text-slate-800" data-translate="sadaqah-title">Yashil
-                    Jamg'arma 🌳💚</h2>
-                <p class="mt-4 max-w-2xl mx-auto text-lg text-slate-600" data-translate="sadaqah-subtitle">
-                    Duo uchun daraxt eking - Sadaqai Joriya. Yaqinlaringiz nomi bilan daraxt ekib, ularning ruhiga savob
-                    ulashing.
-                </p>
-            </div>
-
-            <div class="max-w-6xl mx-auto">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-                    <!-- Duo uchun daraxt -->
-                    <div class="stat-card p-8 rounded-xl border-2 border-green-300 bg-white">
-                        <div class="text-center mb-6">
-                            <div class="text-6xl mb-4">🤲🌳</div>
-                            <h3 class="text-2xl font-bold text-green-700 mb-2">Duo uchun daraxt</h3>
-                            <p class="text-slate-600">Masjid, qabriston yoki biror tashkilot uchun daraxt</p>
-                        </div>
-                        <div class="space-y-4">
-                            <div class="bg-green-50 p-4 rounded-lg">
-                                <p class="text-sm text-slate-700 mb-2">✨ <strong>Sadaqai Joriya</strong> - Doimiy savob
-                                </p>
-                                <p class="text-sm text-slate-600">Daraxt o'sib, meva bergan sari savob davom etadi</p>
-                            </div>
-                            <div class="bg-green-50 p-4 rounded-lg">
-                                <p class="text-sm text-slate-700 mb-2">📜 <strong>Shaxsiy sertifikat</strong></p>
-                                <p class="text-sm text-slate-600">Yaqiningiz nomi va duo bilan maxsus sertifikat</p>
-                            </div>
-                            <div class="bg-green-50 p-4 rounded-lg">
-                                <p class="text-sm text-slate-700 mb-2">📍 <strong>Joylashuv ma'lumoti</strong></p>
-                                <p class="text-sm text-slate-600">Daraxt qayerda ekilganini bilib boring</p>
-                            </div>
-                        </div>
-                        <button
-                            class="w-full mt-6 bg-green-600 text-white font-bold py-4 px-6 rounded-lg hover:bg-green-700 transition-colors text-lg">
-                            Duo uchun daraxt ekish
-                        </button>
-                    </div>
-
-                    <!-- Hayot voqealari uchun -->
-                    <div class="stat-card p-8 rounded-xl border-2 border-green-300 bg-white">
-                        <div class="text-center mb-6">
-                            <div class="text-6xl mb-4">🎉🌱</div>
-                            <h3 class="text-2xl font-bold text-green-700 mb-2">Hayot voqealari uchun</h3>
-                            <p class="text-slate-600">Tug'ilgan kun, to'y, yubiley uchun daraxt sovg'a qiling</p>
-                        </div>
-                        <div class="space-y-4">
-                            <div class="bg-green-50 p-4 rounded-lg">
-                                <p class="text-sm text-slate-700 mb-2">🎂 <strong>Tug'ilgan kun</strong></p>
-                                <p class="text-sm text-slate-600">Har yili o'sib boradigan esdalik</p>
-                            </div>
-                            <div class="bg-green-50 p-4 rounded-lg">
-                                <p class="text-sm text-slate-700 mb-2">💍 <strong>To'y sovg'asi</strong></p>
-                                <p class="text-sm text-slate-600">Oila bilan birga o'sadigan daraxt</p>
-                            </div>
-                            <div class="bg-green-50 p-4 rounded-lg">
-                                <p class="text-sm text-slate-700 mb-2">🎓 <strong>Yutuq nishonasi</strong></p>
-                                <p class="text-sm text-slate-600">Muvaffaqiyatni daraxt bilan nishonlang</p>
-                            </div>
-                        </div>
-                        <button
-                            class="w-full mt-6 bg-green-600 text-white font-bold py-4 px-6 rounded-lg hover:bg-green-700 transition-colors text-lg">
-                            Sovg'a daraxt ekish
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Qanday ishlaydi -->
-                <div class="bg-white p-8 rounded-xl border border-green-200">
-                    <h3 class="text-2xl font-bold text-center text-slate-800 mb-8">Qanday ishlaydi?</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div class="text-center">
-                            <div
-                                class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-                                1️⃣</div>
-                            <h4 class="font-bold mb-2">Daraxt tanlang</h4>
-                            <p class="text-sm text-slate-600">Mevali yoki soyali daraxt tanlang</p>
-                        </div>
-                        <div class="text-center">
-                            <div
-                                class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-                                2️⃣</div>
-                            <h4 class="font-bold mb-2">Ma'lumot kiriting</h4>
-                            <p class="text-sm text-slate-600">Yaqiningiz nomi va duo matnini yozing</p>
-                        </div>
-                        <div class="text-center">
-                            <div
-                                class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-                                3️⃣</div>
-                            <h4 class="font-bold mb-2">Daraxt ekiladi</h4>
-                            <p class="text-sm text-slate-600">Biz daraxtni professional ekamiz</p>
-                        </div>
-                        <div class="text-center">
-                            <div
-                                class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-                                4️⃣</div>
-                            <h4 class="font-bold mb-2">Sertifikat oling</h4>
-                            <p class="text-sm text-slate-600">QR-kodli raqamli sertifikat</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Hadis -->
-                <div class="mt-8 bg-gradient-to-r from-green-50 to-emerald-50 p-8 rounded-xl border-2 border-green-200">
-                    <div class="text-center">
-                        <div class="text-4xl mb-4">📖</div>
-                        <p class="text-lg text-slate-700 italic mb-2" data-i18n="sadaqahHadith.text">
-                            "Musulmon kishi daraxt eksa yoki ekin eksa, undan odam, qush yoki hayvon yesa, bu unga
-                            sadaqa bo'ladi"
-                        </p>
-                        <p class="text-sm text-slate-500 font-semibold">- <span data-i18n="sadaqahHadith.source">Hadisi
-                                Sharif (Buxoriy va Muslim)</span></p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
         <!-- Mavsumiy Eslatgich sahifasi -->
         <section id="seasonal-tips" class="py-16 md:py-24 bg-green-50 rounded-2xl">
             <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Mavsumiy Eslatgich 📅🌱</h2>
-                <p class="mt-4 max-w-xl mx-auto text-slate-500">Har bir mavsumda bog'ingiz uchun nima qilish kerakligini
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800" data-i18n="seasonalSection.title">Mavsumiy
+                    Eslatgich 📅🌱</h2>
+                <p class="mt-4 max-w-xl mx-auto text-slate-500" data-i18n="seasonalSection.subtitle">Har bir mavsumda
+                    bog'ingiz uchun nima qilish kerakligini
                     bilib oling</p>
             </div>
 
@@ -1688,8 +1581,10 @@
         <!-- Yashil Kredit va Sug'urta sahifasi -->
         <section id="green-credit" class="py-16 md:py-24 bg-gradient-to-br from-emerald-50 to-teal-50">
             <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Yashil Kredit va Sug'urta 💳🛡️</h2>
-                <p class="mt-4 max-w-xl mx-auto text-slate-500">Bo'lib to'lang, xavfsiz eking. Daraxtingiz qurisa - pul
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800" data-i18n="creditSection.title">Yashil Kredit
+                    va Sug'urta 💳🛡️</h2>
+                <p class="mt-4 max-w-xl mx-auto text-slate-500" data-i18n="creditSection.subtitle">Bo'lib to'lang,
+                    xavfsiz eking. Daraxtingiz qurisa - pul
                     qaytadi!</p>
             </div>
 
@@ -1891,8 +1786,10 @@
         <!-- Qanday ishlaydi sahifasi -->
         <section id="how-it-works" class="py-16 md:py-24">
             <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Qanday ishlaydi? ⚙️</h2>
-                <p class="mt-4 max-w-xl mx-auto text-slate-500">Oddiy qadamlar bilan yashil harakatga qo'shiling.</p>
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800" data-i18n="howItWorksSection.title">Qanday
+                    ishlaydi? ⚙️</h2>
+                <p class="mt-4 max-w-xl mx-auto text-slate-500" data-i18n="howItWorksSection.subtitle">Oddiy qadamlar
+                    bilan yashil harakatga qo'shiling.</p>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
                 <div class="flex flex-col items-center text-center p-6 bg-white rounded-xl border border-green-200">
@@ -1933,8 +1830,10 @@
         <!-- Mahalla Reytingi sahifasi -->
         <section id="neighborhood-rating" class="py-16 md:py-24 bg-gradient-to-br from-green-50 to-emerald-50">
             <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Mahalla Reytingi 🏆🌳</h2>
-                <p class="mt-4 max-w-xl mx-auto text-slate-500">O'zbekiston bo'ylab eng yashil mahallalar, eng faol
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800" data-i18n="ratingSection.title">Mahalla
+                    Reytingi 🏆🌳</h2>
+                <p class="mt-4 max-w-xl mx-auto text-slate-500" data-i18n="ratingSection.subtitle">O'zbekiston bo'ylab
+                    eng yashil mahallalar, eng faol
                     oilalar. O'z mahallangizni topib, ball to'plang!</p>
             </div>
 
@@ -2240,8 +2139,10 @@
         <!-- AI Maslahatchi sahifasi -->
         <section id="ai-advisor" class="py-16 md:py-24"></section>
         <div class="text-center mb-12">
-            <h2 class="text-3xl md:text-4xl font-bold text-slate-800">AI Bog'bon (24/7 maslahatchi)</h2>
-            <p class="mt-4 max-w-xl mx-auto text-slate-500">Hududingizning iqlimiga mos keladigan daraxtlarni
+            <h2 class="text-3xl md:text-4xl font-bold text-slate-800" data-i18n="aiSection.title">AI Bog'bon (24/7
+                maslahatchi)</h2>
+            <p class="mt-4 max-w-xl mx-auto text-slate-500" data-i18n="aiSection.subtitle">Hududingizning iqlimiga mos
+                keladigan daraxtlarni
                 aniqlash uchun sun'iy intellektdan foydalaning.</p>
         </div>
         <div class="stat-card p-8 rounded-xl border border-green-200 max-w-2xl mx-auto">
@@ -2269,8 +2170,10 @@
         <!-- Yashil Yangiliklar va Video sahifasi -->
         <section id="green-news" class="py-16 md:py-24 bg-gradient-to-br from-cyan-50 to-blue-50">
             <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Yashil Yangiliklar va Video 📺🌿</h2>
-                <p class="mt-4 max-w-xl mx-auto text-slate-500">Har kuni yangi video va buvilarimizning bog'dorchilik
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800" data-i18n="newsSection.title">Yashil
+                    Yangiliklar va Video 📺🌿</h2>
+                <p class="mt-4 max-w-xl mx-auto text-slate-500" data-i18n="newsSection.subtitle">Har kuni yangi video va
+                    buvilarimizning bog'dorchilik
                     sirlari</p>
             </div>
 
@@ -2531,299 +2434,39 @@
             </div>
         </section>
 
-        <!-- Bolalar Zonasi sahifasi -->
-        <section id="kids-zone" class="py-16 md:py-24 bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Bolalar Zonasi 🎮🌳</h2>
-                <p class="mt-4 max-w-xl mx-auto text-slate-500">O'ynang, o'rganing va haqiqiy daraxt eking!</p>
-            </div>
-
-            <div class="max-w-6xl mx-auto">
-                <!-- Super Bog'bon o'yini -->
-                <div class="bg-white p-8 rounded-xl border-2 border-purple-300 shadow-lg mb-12">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <!-- O'yin tavsifi -->
-                        <div>
-                            <div class="flex items-center gap-3 mb-4">
-                                <div class="text-5xl">🎮</div>
-                                <div>
-                                    <h3 class="text-2xl font-bold text-purple-700">Super Bog'bon</h3>
-                                    <p class="text-sm text-slate-600">Mini-o'yin - Daraxt ekish simulyatori</p>
-                                </div>
-                            </div>
-                            <p class="text-slate-700 mb-4">
-                                Virtual bog'ingizda daraxt eking, sug'oring va o'stirib chiqing! Har bir daraxt uchun
-                                ball to'plang va haqiqiy sovg'alar yutib oling.
-                            </p>
-                            <div class="space-y-3 mb-6">
-                                <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                                    <span class="text-2xl">🌱</span>
-                                    <div>
-                                        <h4 class="font-bold text-sm">Daraxt eking</h4>
-                                        <p class="text-xs text-slate-600">Turli xil daraxtlarni tanlang</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                                    <span class="text-2xl">💧</span>
-                                    <div>
-                                        <h4 class="font-bold text-sm">Sug'oring va parvarish qiling</h4>
-                                        <p class="text-xs text-slate-600">Har kuni g'amxo'rlik ko'rsating</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg">
-                                    <span class="text-2xl">🏆</span>
-                                    <div>
-                                        <h4 class="font-bold text-sm">Ball to'plang</h4>
-                                        <p class="text-xs text-slate-600">Yutuqlar va sovg'alar yutib oling</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <button
-                                class="w-full bg-purple-600 text-white font-bold py-3 rounded-lg hover:bg-purple-700 transition-colors">
-                                O'yinni boshlash 🎮
-                            </button>
-                        </div>
-
-                        <!-- O'yin ekrani demo -->
-                        <div
-                            class="bg-gradient-to-br from-sky-100 to-green-100 p-6 rounded-xl border-2 border-purple-200">
-                            <div class="text-center mb-4">
-                                <h4 class="font-bold text-slate-800 mb-2">Sizning bog'ingiz</h4>
-                                <div class="flex justify-center gap-2 mb-4">
-                                    <div class="bg-white px-3 py-1 rounded-full text-sm">
-                                        <span class="font-bold text-green-600">⭐ 1,250</span> ball
-                                    </div>
-                                    <div class="bg-white px-3 py-1 rounded-full text-sm">
-                                        <span class="font-bold text-blue-600">💧 85%</span> suv
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-3 gap-3 mb-4">
-                                <div
-                                    class="bg-white p-3 rounded-lg text-center cursor-pointer hover:scale-105 transition-transform">
-                                    <div class="text-4xl mb-1">🌳</div>
-                                    <p class="text-xs font-bold">Olma</p>
-                                    <p class="text-xs text-green-600">Lvl 5</p>
-                                </div>
-                                <div
-                                    class="bg-white p-3 rounded-lg text-center cursor-pointer hover:scale-105 transition-transform">
-                                    <div class="text-4xl mb-1">🌲</div>
-                                    <p class="text-xs font-bold">Archa</p>
-                                    <p class="text-xs text-green-600">Lvl 3</p>
-                                </div>
-                                <div
-                                    class="bg-white p-3 rounded-lg text-center cursor-pointer hover:scale-105 transition-transform border-2 border-dashed border-slate-300">
-                                    <div class="text-4xl mb-1">➕</div>
-                                    <p class="text-xs font-bold">Yangi</p>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-3 gap-2">
-                                <button
-                                    class="bg-blue-500 text-white py-2 rounded-lg text-xs font-bold hover:bg-blue-600">
-                                    💧 Sug'orish
-                                </button>
-                                <button
-                                    class="bg-green-500 text-white py-2 rounded-lg text-xs font-bold hover:bg-green-600">
-                                    🧪 O'g'it
-                                </button>
-                                <button
-                                    class="bg-yellow-500 text-white py-2 rounded-lg text-xs font-bold hover:bg-yellow-600">
-                                    ✂️ Kesish
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Haqiqiy daraxtni o'yinga ulash -->
-                <div
-                    class="bg-gradient-to-r from-green-100 to-emerald-100 p-8 rounded-xl border-2 border-green-300 shadow-lg mb-12">
-                    <div class="flex items-start gap-6">
-                        <div class="text-7xl">🔗</div>
-                        <div class="flex-1">
-                            <h3 class="text-2xl font-bold text-green-800 mb-3">Haqiqiy daraxtni o'yinga ulang!</h3>
-                            <p class="text-slate-700 mb-4">
-                                Haqiqiy hayotda daraxt ekdingizmi? Uni o'yinga ulang va maxsus bonus ballar oling!
-                                Daraxtingiz o'sgan sari o'yinda ham o'sadi.
-                            </p>
-                            <div class="bg-white p-6 rounded-lg mb-4">
-                                <h4 class="font-bold text-slate-800 mb-4">Qanday ishlaydi?</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                    <div class="text-center">
-                                        <div
-                                            class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-2xl mx-auto mb-2">
-                                            1️⃣</div>
-                                        <p class="text-xs font-bold mb-1">Daraxt eking</p>
-                                        <p class="text-xs text-slate-600">Haqiqiy hayotda</p>
-                                    </div>
-                                    <div class="text-center">
-                                        <div
-                                            class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl mx-auto mb-2">
-                                            2️⃣</div>
-                                        <p class="text-xs font-bold mb-1">QR kod skanerlang</p>
-                                        <p class="text-xs text-slate-600">Daraxtdagi kod</p>
-                                    </div>
-                                    <div class="text-center">
-                                        <div
-                                            class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-2xl mx-auto mb-2">
-                                            3️⃣</div>
-                                        <p class="text-xs font-bold mb-1">O'yinga ulang</p>
-                                        <p class="text-xs text-slate-600">Avtomatik sinxron</p>
-                                    </div>
-                                    <div class="text-center">
-                                        <div
-                                            class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center text-2xl mx-auto mb-2">
-                                            4️⃣</div>
-                                        <p class="text-xs font-bold mb-1">Bonus oling</p>
-                                        <p class="text-xs text-slate-600">Har kuni ball</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                <div class="bg-white p-4 rounded-lg text-center">
-                                    <div class="text-3xl mb-2">⭐</div>
-                                    <p class="font-bold text-2xl text-green-700">+500</p>
-                                    <p class="text-xs text-slate-600">Birinchi ulashda</p>
-                                </div>
-                                <div class="bg-white p-4 rounded-lg text-center">
-                                    <div class="text-3xl mb-2">🎁</div>
-                                    <p class="font-bold text-2xl text-blue-700">+50/kun</p>
-                                    <p class="text-xs text-slate-600">Har kuni bonus</p>
-                                </div>
-                                <div class="bg-white p-4 rounded-lg text-center">
-                                    <div class="text-3xl mb-2">🏆</div>
-                                    <p class="font-bold text-2xl text-purple-700">x2</p>
-                                    <p class="text-xs text-slate-600">Ball multiplikatori</p>
-                                </div>
-                            </div>
-                            <button
-                                class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-colors">
-                                QR kod skanerlash 📷
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Yutuqlar va sovg'alar -->
-                <div class="bg-white p-8 rounded-xl border border-purple-200 mb-12">
-                    <h3 class="text-2xl font-bold text-slate-800 mb-6 text-center">🏆 Yutuqlar va sovg'alar</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div
-                            class="text-center p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border-2 border-yellow-300">
-                            <div class="text-4xl mb-2">🥇</div>
-                            <h4 class="font-bold text-sm mb-1">Birinchi daraxt</h4>
-                            <p class="text-xs text-slate-600 mb-2">Birinchi daraxtni eking</p>
-                            <p class="text-green-600 font-bold text-xs">+100 ball</p>
-                        </div>
-                        <div
-                            class="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border-2 border-green-300">
-                            <div class="text-4xl mb-2">🌳</div>
-                            <h4 class="font-bold text-sm mb-1">Bog'bon</h4>
-                            <p class="text-xs text-slate-600 mb-2">10 ta daraxt eking</p>
-                            <p class="text-green-600 font-bold text-xs">+500 ball</p>
-                        </div>
-                        <div
-                            class="text-center p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg border-2 border-blue-300">
-                            <div class="text-4xl mb-2">💧</div>
-                            <h4 class="font-bold text-sm mb-1">G'amxo'r</h4>
-                            <p class="text-xs text-slate-600 mb-2">7 kun ketma-ket sug'oring</p>
-                            <p class="text-green-600 font-bold text-xs">+300 ball</p>
-                        </div>
-                        <div
-                            class="text-center p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border-2 border-purple-300">
-                            <div class="text-4xl mb-2">🎁</div>
-                            <h4 class="font-bold text-sm mb-1">Haqiqiy bog'bon</h4>
-                            <p class="text-xs text-slate-600 mb-2">Haqiqiy daraxt ulang</p>
-                            <p class="text-green-600 font-bold text-xs">+1000 ball</p>
-                        </div>
-                    </div>
-                    <div class="bg-gradient-to-r from-purple-100 to-pink-100 p-6 rounded-lg">
-                        <h4 class="font-bold text-slate-800 mb-3 text-center">🎁 Ballarni sovg'alarga almashtiring!</h4>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <div class="bg-white p-3 rounded-lg text-center">
-                                <div class="text-3xl mb-1">🌱</div>
-                                <p class="text-xs font-bold mb-1">Ko'chat bepul</p>
-                                <p class="text-xs text-green-600">500 ball</p>
-                            </div>
-                            <div class="bg-white p-3 rounded-lg text-center">
-                                <div class="text-3xl mb-1">🪴</div>
-                                <p class="text-xs font-bold mb-1">Idish bepul</p>
-                                <p class="text-xs text-green-600">800 ball</p>
-                            </div>
-                            <div class="bg-white p-3 rounded-lg text-center">
-                                <div class="text-3xl mb-1">🎒</div>
-                                <p class="text-xs font-bold mb-1">Bog'bon to'plami</p>
-                                <p class="text-xs text-green-600">1500 ball</p>
-                            </div>
-                            <div class="bg-white p-3 rounded-lg text-center">
-                                <div class="text-3xl mb-1">🌳</div>
-                                <p class="text-xs font-bold mb-1">Daraxt bepul</p>
-                                <p class="text-xs text-green-600">3000 ball</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Ota-onalar uchun -->
-                <div class="bg-gradient-to-r from-blue-100 to-purple-100 p-8 rounded-xl border-2 border-blue-300">
-                    <div class="flex items-start gap-4">
-                        <div class="text-5xl">👨‍👩‍👧‍👦</div>
-                        <div class="flex-1">
-                            <h3 class="text-2xl font-bold text-blue-800 mb-3">Ota-onalar uchun</h3>
-                            <p class="text-slate-700 mb-4">
-                                Bolalar Zonasi - bu bolalaringizni tabiat bilan bog'lash va ekologik mas'uliyatni
-                                o'rgatishning qiziqarli usuli.
-                            </p>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div class="bg-white p-4 rounded-lg">
-                                    <div class="text-3xl mb-2">📚</div>
-                                    <h4 class="font-bold text-sm mb-1">Ta'limiy</h4>
-                                    <p class="text-xs text-slate-600">Daraxtlar haqida o'rganadi</p>
-                                </div>
-                                <div class="bg-white p-4 rounded-lg">
-                                    <div class="text-3xl mb-2">🎮</div>
-                                    <h4 class="font-bold text-sm mb-1">Qiziqarli</h4>
-                                    <p class="text-xs text-slate-600">O'yin orqali o'rganish</p>
-                                </div>
-                                <div class="bg-white p-4 rounded-lg">
-                                    <div class="text-3xl mb-2">🌍</div>
-                                    <h4 class="font-bold text-sm mb-1">Foydali</h4>
-                                    <p class="text-xs text-slate-600">Haqiqiy daraxt ekishga undaydi</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
         <!-- Aloqa sahifasi -->
         <section id="contact" class="py-16 md:py-24 bg-green-50 rounded-2xl">
             <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Biz bilan bog'laning 📞</h2>
-                <p class="mt-4 max-w-xl mx-auto text-slate-500">Loyiha bo'yicha savollaringiz bo'lsa yoki hamkorlikni
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800" data-i18n="contactSection.title">Biz bilan
+                    bog'laning 📞</h2>
+                <p class="mt-4 max-w-xl mx-auto text-slate-500" data-i18n="contactSection.subtitle">Loyiha bo'yicha
+                    savollaringiz bo'lsa yoki hamkorlikni
                     boshlamoqchi bo'lsangiz, bizga murojaat qiling.</p>
             </div>
             <div class="max-w-md mx-auto stat-card p-8 rounded-xl border border-green-200">
                 <form class="space-y-4">
                     <div>
-                        <label for="name" class="block text-sm font-medium text-slate-700">Ism</label>
+                        <label for="name" class="block text-sm font-medium text-slate-700"
+                            data-i18n="contactSection.name">Ism</label>
                         <input type="text" id="name"
                             class="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500">
                     </div>
                     <div>
-                        <label for="email" class="block text-sm font-medium text-slate-700">Email</label>
+                        <label for="email" class="block text-sm font-medium text-slate-700"
+                            data-i18n="contactSection.email">Email</label>
                         <input type="email" id="email"
                             class="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500">
                     </div>
                     <div>
-                        <label for="message" class="block text-sm font-medium text-slate-700">Xabar</label>
+                        <label for="message" class="block text-sm font-medium text-slate-700"
+                            data-i18n="contactSection.message">Xabar</label>
                         <textarea id="message" rows="4"
                             class="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-500 focus:ring-green-500"></textarea>
                     </div>
                     <div>
                         <button type="submit"
-                            class="w-full bg-green-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-800 transition-colors">Yuborish</button>
+                            class="w-full bg-green-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-800 transition-colors"
+                            data-i18n="contactSection.send">Yuborish</button>
                     </div>
                 </form>
             </div>
@@ -2832,8 +2475,10 @@
         <!-- Buyurtmalar tarixi sahifasi -->
         <section id="orders" class="py-16 md:py-24">
             <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Mening buyurtmalarim 📦</h2>
-                <p class="mt-4 max-w-xl mx-auto text-slate-500">Barcha buyurtmalaringiz va ularning holati</p>
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800" data-i18n="ordersSection.title">Mening
+                    buyurtmalarim 📦</h2>
+                <p class="mt-4 max-w-xl mx-auto text-slate-500" data-i18n="ordersSection.subtitle">Barcha
+                    buyurtmalaringiz va ularning holati</p>
             </div>
 
             <!-- No Orders Message -->
@@ -6734,170 +6379,7 @@
 
 </html>
 
-const translations = {
-uz: {
-greenShop: { seedlings: "🌱 Ko'chatlar" },
-sadaqah: { title: "Yashil Jamg'arma 🌳💚", subtitle: "Duo uchun daraxt eking - Sadaqai Joriya" },
-kitchen: {
-basilName: "Rayhon ko'chati",
-basilDesc: "Kichik idishda, oshxonaga mos",
-dillName: "Ukrop ko'chati",
-dillDesc: "Tez o'sadigan, oshxona uchun",
-recipeLabel: "🍝 Retsept:",
-basilRecipe: "Palov, sho'rva, salat"
-},
-catalog: {
-chinorName: "Chinordan",
-chinorDesc: "Ushbu daraxt tez o'sadi, soyasi qalin va havo tozalashda juda samarali.",
-chinorPrice: "Narxi: 150,000 so'm",
-olmaName: "Olmali daraxt",
-olmaDesc: "Meva beruvchi daraxt. Havoni tozalash bilan birga, bog'ingizga chiroy beradi.",
-olmaPrice: "Narxi: 120,000 so'm",
-atirgulName: "Atirgul butasi",
-atirgulDesc: "Bog' va hovlilarga chiroy beruvchi atirgul butasi, oson parvarish qilinadi.",
-atirgulPrice: "Narxi: 45,000 so'm",
-addToCart: "Savatga qo'shish"
-},
-sadaqahHadith: {
-text: "Musulmon kishi daraxt eksa yoki ekin eksa, undan odam, qush yoki hayvon yesa, bu unga sadaqa bo'ladi",
-source: "Hadisi Sharif (Buxoriy va Muslim)"
-}
-},
-ru: {
-greenShop: { seedlings: "🌱 Саженцы" },
-sadaqah: { title: "Зеленый Фонд 🌳💚", subtitle: "Посадите дерево за умершего - Садака Джарийа" },
-kitchen: {
-basilName: "Саженец базилика",
-basilDesc: "В маленьком горшке, подходит для кухни",
-dillName: "Саженец укропа",
-dillDesc: "Быстрорастущий, для кухни",
-recipeLabel: "🍝 Рецепт:",
-basilRecipe: "Плов, суп, салат"
-},
-catalog: {
-chinorName: "Чинар",
-chinorDesc: "Это дерево быстро растет, имеет густую тень и очень эффективно очищает воздух.",
-chinorPrice: "Цена: 150,000 сум",
-olmaName: "Яблоня",
-olmaDesc: "Плодовое дерево. Очищает воздух и украшает ваш сад.",
-olmaPrice: "Цена: 120,000 сум",
-atirgulName: "Куст розы",
-atirgulDesc: "Куст розы, украшающий сады и дворы, легко ухаживать.",
-atirgulPrice: "Цена: 45,000 сум",
-addToCart: "В корзину"
-},
-sadaqahHadith: {
-text: "Если мусульманин посадит дерево или посеет урожай, и человек, птица или животное съест из него, это будет для
-него милостыней",
-source: "Хадис Шариф (Бухари и Муслим)"
-}
-},
-en: {
-greenShop: { seedlings: "🌱 Seedlings" },
-sadaqah: { title: "Green Fund 🌳💚", subtitle: "Plant a tree for the deceased - Sadaqah Jariyah" },
-kitchen: {
-basilName: "Basil Seedling",
-basilDesc: "In a small pot, perfect for kitchen",
-dillName: "Dill Seedling",
-dillDesc: "Fast-growing, for kitchen",
-recipeLabel: "🍝 Recipe:",
-basilRecipe: "Pilaf, soup, salad"
-},
-catalog: {
-chinorName: "Plane Tree",
-chinorDesc: "This tree grows fast, has dense shade and is very effective in air purification.",
-chinorPrice: "Price: 150,000 sum",
-olmaName: "Apple Tree",
-olmaDesc: "Fruit-bearing tree. Purifies air and beautifies your garden.",
-olmaPrice: "Price: 120,000 sum",
-atirgulName: "Rose Bush",
-atirgulDesc: "Rose bush that beautifies gardens and yards, easy to care for.",
-atirgulPrice: "Price: 45,000 sum",
-addToCart: "Add to Cart"
-},
-sadaqahHadith: {
-text: "If a Muslim plants a tree or sows a crop, and a person, bird or animal eats from it, it will be charity for him",
-source: "Hadith Sharif (Bukhari and Muslim)"
-}
-}
-};
-</script>
-</body>
 
-</html>
-
-<script>
-    const translations = {
-        uz: {
-            greenShop: { seedlings: "🌱 Ko'chatlar" },
-            sadaqah: { title: "Yashil Jamg'arma 🌳", subtitle: "Duo uchun daraxt eking - Sadaqai Joriya" },
-            kitchen: {
-                basilName: "Rayhon ko'chati",
-                basilDesc: "Kichik idishda, oshxonaga mos",
-                dillName: "Ukrop ko'chati",
-                dillDesc: "Tez o'sadigan, oshxona uchun",
-                recipeLabel: "👨🍳 Retsept:",
-                basilRecipe: "Palov, sho'rva, salat"
-            }
-        },
-        ru: {
-            greenShop: { seedlings: "🌱 Саженцы" },
-            sadaqah: { title: "Зеленый фонд 🌳", subtitle: "Посадите дерево для умершего - Садака Джарийа" },
-            kitchen: {
-                basilName: "Саженец базилика",
-                basilDesc: "В маленьком горшке, подходит для кухни",
-                dillName: "Саженец укропа",
-                dillDesc: "Быстрорастущий, для кухни",
-                recipeLabel: "👨🍳 Рецепт:",
-                basilRecipe: "Плов, суп, салат"
-            }
-        },
-        en: {
-            greenShop: { seedlings: "🌱 Seedlings" },
-            sadaqah: { title: "Green Fund 🌳", subtitle: "Plant a tree for the deceased - Sadaqah Jariyah" },
-            kitchen: {
-                basilName: "Basil Seedling",
-                basilDesc: "In a small pot, perfect for kitchen",
-                dillName: "Dill Seedling",
-                dillDesc: "Fast-growing, for kitchen",
-                recipeLabel: "👨🍳 Recipe:",
-                basilRecipe: "Pilaf, soup, salad"
-            }
-        }
-    };
-    function changeLanguage(lang) {
-        localStorage.setItem('selectedLanguage', lang);
-        document.documentElement.lang = lang;
-        document.querySelectorAll('.lang-btn').forEach(btn => {
-            if (btn.getAttribute('data-lang') === lang) {
-                btn.style.setProperty('background-color', '#16a34a', 'important');
-                btn.style.setProperty('color', 'white', 'important');
-            } else {
-                btn.style.setProperty('background-color', '#e2e8f0', 'important');
-                btn.style.setProperty('color', '#475569', 'important');
-            }
-        });
-        document.querySelectorAll('[data-i18n]').forEach(element => {
-            const key = element.getAttribute('data-i18n');
-            const keys = key.split('.');
-            let value = translations[lang];
-            for (let k of keys) {
-                value = value?.[k];
-            }
-            if (value) element.textContent = value;
-        });
-    }
-    window.addEventListener('DOMContentLoaded', () => {
-        const savedLang = localStorage.getItem('selectedLanguage') || 'uz';
-        changeLanguage(savedLang);
-    });
-
-    // Sahifa to'liq yuklangandan keyin ham ishga tushirish
-    window.addEventListener('load', () => {
-        const savedLang = localStorage.getItem('selectedLanguage') || 'uz';
-        changeLanguage(savedLang);
-    });
-</script>
 
 </body>
 

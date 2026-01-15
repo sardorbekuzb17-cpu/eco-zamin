@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="uz" class="scroll-smooth">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -641,25 +641,25 @@
                 </div>
 
                 <!-- Slider indikatorlari -->
-                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                    <button onclick="goToSlide(0)"
-                        class="slider-dot w-3 h-3 rounded-full bg-white/80 hover:bg-white transition-all"></button>
-                    <button onclick="goToSlide(1)"
-                        class="slider-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white transition-all"></button>
-                    <button onclick="goToSlide(2)"
-                        class="slider-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white transition-all"></button>
-                    <button onclick="goToSlide(3)"
-                        class="slider-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white transition-all"></button>
-                    <button onclick="goToSlide(4)"
-                        class="slider-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white transition-all"></button>
-                    <button onclick="goToSlide(5)"
-                        class="slider-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white transition-all"></button>
-                    <button onclick="goToSlide(6)"
-                        class="slider-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white transition-all"></button>
-                    <button onclick="goToSlide(7)"
-                        class="slider-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white transition-all"></button>
-                    <button onclick="goToSlide(8)"
-                        class="slider-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white transition-all"></button>
+                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2" role="tablist" aria-label="Slider navigation">
+                    <button onclick="goToSlide(0)" aria-label="Go to slide 1"
+                        class="slider-dot w-3 h-3 rounded-full bg-white/80 hover:bg-white transition-all" role="tab" aria-selected="true"></button>
+                    <button onclick="goToSlide(1)" aria-label="Go to slide 2"
+                        class="slider-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white transition-all" role="tab" aria-selected="false"></button>
+                    <button onclick="goToSlide(2)" aria-label="Go to slide 3"
+                        class="slider-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white transition-all" role="tab" aria-selected="false"></button>
+                    <button onclick="goToSlide(3)" aria-label="Go to slide 4"
+                        class="slider-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white transition-all" role="tab" aria-selected="false"></button>
+                    <button onclick="goToSlide(4)" aria-label="Go to slide 5"
+                        class="slider-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white transition-all" role="tab" aria-selected="false"></button>
+                    <button onclick="goToSlide(5)" aria-label="Go to slide 6"
+                        class="slider-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white transition-all" role="tab" aria-selected="false"></button>
+                    <button onclick="goToSlide(6)" aria-label="Go to slide 7"
+                        class="slider-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white transition-all" role="tab" aria-selected="false"></button>
+                    <button onclick="goToSlide(7)" aria-label="Go to slide 8"
+                        class="slider-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white transition-all" role="tab" aria-selected="false"></button>
+                    <button onclick="goToSlide(8)" aria-label="Go to slide 9"
+                        class="slider-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white transition-all" role="tab" aria-selected="false"></button>
                 </div>
             </div>
 
@@ -1011,7 +1011,8 @@
                         <label for="type-filter-select" class="block text-sm font-medium text-slate-700 mb-1">Mahsulot
                             turi</label>
                         <select id="type-filter-select"
-                            class="w-full px-4 py-2 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
+                            class="w-full px-4 py-2 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                            aria-label="Mahsulot turini tanlash">
                             <option value="">Barchasi</option>
                             <option value="daraxt">Daraxt</option>
                             <option value="meva">Meva</option>
@@ -1038,7 +1039,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto" id="product-catalog"
-                role="list" aria-label="Mahsulotlar ro'yxati">
+                aria-label="Mahsulotlar ro'yxati">
                 <!-- Chinordan -->
                 <div class="stat-card p-6 rounded-xl border-2 border-green-300 bg-white">
                     <div class="text-6xl mb-4 text-center">🌳</div>
@@ -1325,211 +1326,6 @@
                         class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 transition-colors">
                         Kuz uchun mahsulotlar
                     </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Yashil Kredit va Sug'urta sahifasi -->
-        <section id="green-credit" class="py-16 md:py-24 bg-gradient-to-br from-emerald-50 to-teal-50">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold text-slate-800" data-i18n="creditSection.title">Yashil Kredit
-                    va Sug'urta 💳🛡️</h2>
-                <p class="mt-4 max-w-xl mx-auto text-slate-500" data-i18n="creditSection.subtitle">Bo'lib to'lang,
-                    xavfsiz eking. Daraxtingiz qurisa - pul
-                    qaytadi!</p>
-            </div>
-
-            <div class="max-w-6xl mx-auto">
-                <!-- Asosiy takliflar -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-                    <!-- Bo'lib to'lash -->
-                    <div class="bg-white p-8 rounded-xl border-2 border-green-300 shadow-lg">
-                        <div class="text-center mb-6">
-                            <div class="text-6xl mb-4">💳</div>
-                            <h3 class="text-2xl font-bold text-green-700 mb-2">Bo'lib to'lash (0% foiz)</h3>
-                            <p class="text-slate-600">Hech qanday qo'shimcha to'lovsiz, qulay muddatlarda to'lang</p>
-                        </div>
-                        <div class="space-y-4 mb-6">
-                            <div class="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
-                                <span class="text-2xl">✓</span>
-                                <div>
-                                    <h4 class="font-bold text-slate-800">3 oyga bo'lib to'lash</h4>
-                                    <p class="text-sm text-slate-600">Har oy teng miqdorda</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
-                                <span class="text-2xl">✓</span>
-                                <div>
-                                    <h4 class="font-bold text-slate-800">6 oyga bo'lib to'lash</h4>
-                                    <p class="text-sm text-slate-600">Katta xaridlar uchun</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
-                                <span class="text-2xl">✓</span>
-                                <div>
-                                    <h4 class="font-bold text-slate-800">12 oyga bo'lib to'lash</h4>
-                                    <p class="text-sm text-slate-600">Maksimal qulaylik</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-gradient-to-r from-green-100 to-emerald-100 p-4 rounded-lg mb-4">
-                            <h4 class="font-bold text-slate-800 mb-2">Misol:</h4>
-                            <p class="text-sm text-slate-700">50,000 so'mlik olma daraxti → 3 oyga bo'lib to'lash</p>
-                            <p class="text-2xl font-bold text-green-700 mt-2">16,667 so'm/oy</p>
-                            <p class="text-xs text-slate-600 mt-1">Hech qanday qo'shimcha to'lov yo'q!</p>
-                        </div>
-                        <button
-                            class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-colors">
-                            Bo'lib to'lashni tanlash
-                        </button>
-                    </div>
-
-                    <!-- Sug'urta -->
-                    <div class="bg-white p-8 rounded-xl border-2 border-blue-300 shadow-lg">
-                        <div class="text-center mb-6">
-                            <div class="text-6xl mb-4">🛡️</div>
-                            <h3 class="text-2xl font-bold text-blue-700 mb-2">Yashil Sug'urta</h3>
-                            <p class="text-slate-600">1 yil ichida qurisa - 100% pul qaytadi</p>
-                        </div>
-                        <div class="space-y-4 mb-6">
-                            <div class="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-                                <span class="text-2xl">🌳</span>
-                                <div>
-                                    <h4 class="font-bold text-slate-800">Daraxt qurishi</h4>
-                                    <p class="text-sm text-slate-600">100% pul qaytariladi</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-                                <span class="text-2xl">🌪️</span>
-                                <div>
-                                    <h4 class="font-bold text-slate-800">Tabiiy ofatlar</h4>
-                                    <p class="text-sm text-slate-600">Bo'ron, do'l, sel zararidan himoya</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-                                <span class="text-2xl">🐛</span>
-                                <div>
-                                    <h4 class="font-bold text-slate-800">Kasalliklar</h4>
-                                    <p class="text-sm text-slate-600">Zararkunandalar va kasalliklardan</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-gradient-to-r from-blue-100 to-cyan-100 p-4 rounded-lg mb-4">
-                            <h4 class="font-bold text-slate-800 mb-2">Sug'urta narxi:</h4>
-                            <p class="text-sm text-slate-700">Mahsulot narxining atigi 5%</p>
-                            <p class="text-2xl font-bold text-blue-700 mt-2">50,000 so'm → 2,500 so'm</p>
-                            <p class="text-xs text-slate-600 mt-1">1 yillik to'liq himoya!</p>
-                        </div>
-                        <button
-                            class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-colors">
-                            Sug'urta qo'shish
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Avto-qo'shilish xususiyati -->
-                <div
-                    class="bg-gradient-to-r from-purple-100 to-pink-100 p-8 rounded-xl border-2 border-purple-300 mb-12">
-                    <div class="flex items-start gap-4">
-                        <div class="text-5xl">⚡</div>
-                        <div class="flex-1">
-                            <h3 class="text-2xl font-bold text-purple-800 mb-3">Avtomatik sug'urta</h3>
-                            <p class="text-slate-700 mb-4">Barcha buyurtmalarga avtomatik ravishda sug'urta qo'shiladi.
-                                Siz faqat tasdiqlaysiz yoki bekor qilasiz.</p>
-                            <div class="bg-white p-6 rounded-lg">
-                                <div class="flex items-center justify-between mb-4">
-                                    <div>
-                                        <h4 class="font-bold text-slate-800">Avtomatik sug'urta qo'shish</h4>
-                                        <p class="text-sm text-slate-600">Har bir buyurtmaga avtomatik qo'shiladi</p>
-                                    </div>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" checked class="sr-only peer">
-                                        <div
-                                            class="w-14 h-7 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600">
-                                        </div>
-                                    </label>
-                                </div>
-                                <div class="flex items-start gap-2 text-sm text-slate-600">
-                                    <span class="text-green-600">💡</span>
-                                    <p>Tavsiya: Sug'urta sizning investitsiyangizni himoya qiladi. Har doim yoqilgan
-                                        holda qoldiring!</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Qanday ishlaydi -->
-                <div class="bg-white p-8 rounded-xl border border-green-200 mb-12">
-                    <h3 class="text-2xl font-bold text-slate-800 mb-6 text-center">📋 Qanday ishlaydi?</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div class="text-center">
-                            <div
-                                class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-3">
-                                1️⃣</div>
-                            <h4 class="font-bold mb-2">Xarid qiling</h4>
-                            <p class="text-sm text-slate-600">Mahsulotni tanlang va savatga qo'shing</p>
-                        </div>
-                        <div class="text-center">
-                            <div
-                                class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-3">
-                                2️⃣</div>
-                            <h4 class="font-bold mb-2">To'lov usulini tanlang</h4>
-                            <p class="text-sm text-slate-600">Bo'lib to'lash yoki to'liq to'lash</p>
-                        </div>
-                        <div class="text-center">
-                            <div
-                                class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-3">
-                                3️⃣</div>
-                            <h4 class="font-bold mb-2">Sug'urta tasdiqlang</h4>
-                            <p class="text-sm text-slate-600">Avtomatik qo'shilgan sug'urtani tasdiqlang</p>
-                        </div>
-                        <div class="text-center">
-                            <div
-                                class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-3">
-                                4️⃣</div>
-                            <h4 class="font-bold mb-2">Xavfsiz eking</h4>
-                            <p class="text-sm text-slate-600">Daraxtingiz himoyalangan!</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tez-tez so'raladigan savollar -->
-                <div class="bg-white p-8 rounded-xl border border-green-200">
-                    <h3 class="text-2xl font-bold text-slate-800 mb-6 text-center">❓ Tez-tez so'raladigan savollar</h3>
-                    <div class="space-y-4">
-                        <div class="p-4 bg-slate-50 rounded-lg">
-                            <h4 class="font-bold text-slate-800 mb-2">Bo'lib to'lashda qo'shimcha to'lov bormi?</h4>
-                            <p class="text-sm text-slate-600">Yo'q! Biz 0% foiz bilan bo'lib to'lash imkoniyatini taklif
-                                qilamiz. Hech qanday yashirin to'lovlar yo'q.</p>
-                        </div>
-                        <div class="p-4 bg-slate-50 rounded-lg">
-                            <h4 class="font-bold text-slate-800 mb-2">Daraxt qurisa haqiqatan ham pul qaytadiladimi?
-                            </h4>
-                            <p class="text-sm text-slate-600">Ha! Agar daraxt 1 yil ichida qurisa va siz g'amxo'rlik
-                                ko'rsatma qoidalariga rioya qilgan bo'lsangiz, 100% pul qaytariladi.</p>
-                        </div>
-                        <div class="p-4 bg-slate-50 rounded-lg">
-                            <h4 class="font-bold text-slate-800 mb-2">Sug'urtani bekor qilsam bo'ladimi?</h4>
-                            <p class="text-sm text-slate-600">Ha, checkout paytida sug'urtani bekor qilishingiz mumkin.
-                                Lekin biz tavsiya qilamiz - bu sizning investitsiyangizni himoya qiladi.</p>
-                        </div>
-                        <div class="p-4 bg-slate-50 rounded-lg">
-                            <h4 class="font-bold text-slate-800 mb-2">Qanday qilib da'vo qilaman?</h4>
-                            <p class="text-sm text-slate-600">Profilingizdan "Sug'urta da'vosi" bo'limiga o'ting, daraxt
-                                rasmini yuklang va sabab yozing. Biz 3 ish kuni ichida ko'rib chiqamiz.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CTA -->
-                <div class="mt-12 text-center bg-gradient-to-r from-green-600 to-emerald-600 p-8 rounded-xl text-white">
-                    <h3 class="text-3xl font-bold mb-4">Xavfsiz va qulay xarid qiling! 🌳</h3>
-                    <p class="text-lg mb-6">Bo'lib to'lang, sug'urta qiling va tinch uxlang</p>
-                    <a href="#catalog"
-                        class="inline-block bg-white text-green-700 font-bold px-8 py-4 rounded-lg hover:bg-slate-100 transition-colors">
-                        Xarid qilishni boshlash
-                    </a>
                 </div>
             </div>
         </section>
@@ -1824,9 +1620,10 @@
                                     class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label class="block text-sm font-bold text-slate-700 mb-2">Shahar</label>
-                                <select
-                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <label for="city-select" class="block text-sm font-bold text-slate-700 mb-2">Shahar</label>
+                                <select id="city-select"
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                                    aria-label="Shahar tanlash">
                                     <option>Toshkent</option>
                                     <option>Samarqand</option>
                                     <option>Buxoro</option>
@@ -3653,6 +3450,102 @@
                     }
                 });
             }
+
+            // Seasonal section - barcha hardcoded matnlarni tarjima qilish
+            if (t.seasonalSection) {
+                const ss = t.seasonalSection;
+                
+                // Bugungi eslatma
+                document.querySelectorAll('#seasonal-tips h3').forEach(h3 => {
+                    if (h3.textContent.includes('Bugungi eslatma')) {
+                        h3.textContent = ss.todayReminder;
+                    }
+                });
+
+                // Push-bildirishnoma
+                document.querySelectorAll('#seasonal-tips button').forEach(btn => {
+                    if (btn.textContent.includes('Push-bildirishnomani')) {
+                        const spans = btn.querySelectorAll('span');
+                        if (spans.length > 1) {
+                            spans[spans.length - 1].textContent = ss.pushNotification;
+                        } else {
+                            btn.textContent = '🔔 ' + ss.pushNotification;
+                        }
+                    }
+                });
+
+                // Sozlamalar
+                document.querySelectorAll('#seasonal-tips button').forEach(btn => {
+                    if (btn.textContent.trim() === 'Sozlamalar') {
+                        btn.textContent = ss.settings;
+                    }
+                });
+
+                // Kunlik eslatmalar
+                document.querySelectorAll('#seasonal-tips h3').forEach(h3 => {
+                    if (h3.textContent.includes('Kunlik eslatmalar')) {
+                        h3.textContent = ss.dailyReminders;
+                    }
+                });
+
+                // Ertalab, kunduzi, kechqurun
+                document.querySelectorAll('#seasonal-tips h4').forEach(h4 => {
+                    const text = h4.textContent.trim();
+                    if (text.includes('Ertalab 7:00')) h4.textContent = ss.morning;
+                    else if (text.includes('Kunduzi 12:00')) h4.textContent = ss.noon;
+                    else if (text.includes('Kechqurun 18:00')) h4.textContent = ss.evening;
+                });
+
+                // Yoqilgan/O'chirilgan
+                document.querySelectorAll('#seasonal-tips span').forEach(span => {
+                    const text = span.textContent.trim();
+                    if (text === 'Yoqilgan') span.textContent = ss.enabled;
+                    else if (text === 'O\'chirilgan') span.textContent = ss.disabled;
+                });
+
+                // Hozirgi mavsum
+                document.querySelectorAll('#seasonal-tips h3').forEach(h3 => {
+                    if (h3.textContent.includes('Hozirgi mavsum')) {
+                        h3.textContent = ss.currentSeason;
+                    }
+                });
+                document.querySelectorAll('#seasonal-tips p').forEach(p => {
+                    if (p.textContent.includes('Kuz - hosil yig\'ish')) {
+                        p.textContent = ss.currentSeasonDesc;
+                    }
+                });
+
+                // Kuz uchun mahsulotlar
+                document.querySelectorAll('#seasonal-tips button').forEach(btn => {
+                    if (btn.textContent.includes('Kuz uchun mahsulotlar')) {
+                        btn.textContent = ss.seasonProducts;
+                    }
+                });
+            }
+
+            // Hardcoded rus matnlarni to'g'rilash
+            // "Вся необходимая зелень в одном наборе! С маленькими горшками."
+            document.querySelectorAll('p, h3, h4, span, div, button').forEach(el => {
+                const text = el.textContent.trim();
+                // Faqat to'g'ridan-to'g'ri matn elementlarini tekshirish (bola elementlarsiz)
+                if (el.children.length === 0) {
+                    if (text.includes("Вся необходимая зелень в одном наборе")) {
+                        if (t.kitchenGarden && t.kitchenGarden.setDescription) {
+                            el.textContent = t.kitchenGarden.setDescription;
+                        }
+                    }
+                    if (text === "Поделитесь своей историей!") {
+                        if (t.grandmaStories && t.grandmaStories.shareTitle) {
+                            el.textContent = t.grandmaStories.shareTitle;
+                        }
+                    }
+                    if (text === "Какие секреты садоводства есть в вашей семье?") {
+                        if (t.grandmaStories && t.grandmaStories.shareSubtitle) {
+                            el.textContent = t.grandmaStories.shareSubtitle;
+                        }
+                    }
+                }
+            });
         }
 
         // Slider funksiyalari (Slide Show)

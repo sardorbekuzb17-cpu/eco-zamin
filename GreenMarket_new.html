@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenMarket</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0fdf4;
+        }
+
+        .radio-input {
+            background: #fff;
+            padding: 8px 12px;
+            border-radius: 20px;
+            display: flex;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .radio-input input {
+            display: none;
+        }
+
+        .radio-input label span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            margin: 0 2px;
+            cursor: pointer;
+            border-radius: 50%;
+            background: #b0b0b0;
+            color: white;
+            font-weight: bold;
+            font-size: 11px;
+            transition: all 0.3s;
+        }
+
+        .radio-input input:checked+label span {
+            background: #16a34a;
+            transform: scale(1.1);
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #dcfce7;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- HEADER -->
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 border-b border-slate-200">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-green-700">GreenMarket</h1>
+            <div class="flex items-center gap-4">
+                <!-- Til tanlash -->
+                <div class="radio-input">
+                    <input type="radio" id="lang-uz" name="language" value="uz" checked onchange="changeLanguage('uz')">
+                    <label for="lang-uz"><span>UZ</span></label>
+                    <input type="radio" id="lang-ru" name="language" value="ru" onchange="changeLanguage('ru')">
+                    <label for="lang-ru"><span>RU</span></label>
+                    <input type="radio" id="lang-en" name="language" value="en" onchange="changeLanguage('en')">
+                    <label for="lang-en"><span>EN</span></label>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-8">
+
+        <!-- HERO -->
+        <section class="text-center py-16">
+            <h1 class="text-4xl md:text-6xl font-extrabold text-slate-800" data-i18n="hero.title">
+                Yashil kelajakni bugundan boshlab birga quramiz.
+            </h1>
+            <p class="mt-6 max-w-2xl mx-auto text-lg text-slate-500" data-i18n="hero.subtitle">
+                GreenMarket - bu daraxt ekishni osonlashtiruvchi platforma.
+            </p>
+            <div class="mt-10">
+                <a href="#catalog"
+                    class="bg-green-700 text-white font-bold px-8 py-4 rounded-lg text-lg hover:bg-green-800"
+                    data-i18n="hero.btn">Mahsulotlarni ko'rish</a>
+            </div>
+        </section>
+
+        <!-- YASHIL DO'KON -->
+        <section id="shop" class="py-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-800" data-i18n="shop.title">Yashil Do'kon 🌿</h2>
+                <p class="mt-4 text-slate-500" data-i18n="shop.subtitle">Tabiatga g'amxo'rlik qilish uchun barcha
+                    kerakli narsalar</p>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-6" data-i18n="shop.trees">🌳 Daraxtlar</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="card p-4 rounded-xl">
+                    <div class="bg-green-100 h-40 rounded-lg mb-3 flex items-center justify-center text-5xl">🍎</div>
+                    <h4 class="font-bold mb-2" data-i18n="shop.apple">Olma daraxti</h4>
+                    <p class="text-sm text-slate-600 mb-2" data-i18n="shop.appleDesc">Mevali daraxt, yuqori hosil</p>
+                    <p class="text-green-700 font-bold text-lg mb-2">50,000 <span data-i18n="common.sum">so'm</span></p>
+                    <button class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
+                        data-i18n="shop.addToCart">Savatga</button>
+                </div>
+                <div class="card p-4 rounded-xl">
+                    <div class="bg-green-100 h-40 rounded-lg mb-3 flex items-center justify-center text-5xl">🍐</div>
+                    <h4 class="font-bold mb-2" data-i18n="shop.pear">Nok daraxti</h4>
+                    <p class="text-sm text-slate-600 mb-2" data-i18n="shop.pearDesc">Shirin mevali daraxt</p>
+                    <p class="text-green-700 font-bold text-lg mb-2">40,000 <span data-i18n="common.sum">so'm</span></p>
+                    <button class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
+                        data-i18n="shop.addToCart">Savatga</button>
+                </div>
+                <div class="card p-4 rounded-xl">
+                    <div class="bg-green-100 h-40 rounded-lg mb-3 flex items-center justify-center text-5xl">🍑</div>
+                    <h4 class="font-bold mb-2" data-i18n="shop.apricot">O'rik daraxti</h4>
+                    <p class="text-sm text-slate-600 mb-2" data-i18n="shop.apricotDesc">Bahorgi gullari chiroyli</p>
+                    <p class="text-green-700 font-bold text-lg mb-2">45,000 <span data-i18n="common.sum">so'm</span></p>
+                    <button class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
+                        data-i18n="shop.addToCart">Savatga</button>
+                </div>
+                <div class="card p-4 rounded-xl">
+                    <div class="bg-green-100 h-40 rounded-lg mb-3 flex items-center justify-center text-5xl">🍒</div>
+                    <h4 class="font-bold mb-2" data-i18n="shop.cherry">Gilos daraxti</h4>
+                    <p class="text-sm text-slate-600 mb-2" data-i18n="shop.cherryDesc">Mazali mevali daraxt</p>
+                    <p class="text-green-700 font-bold text-lg mb-2">55,000 <span data-i18n="common.sum">so'm</span></p>
+                    <button class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
+                        data-i18n="shop.addToCart">Savatga</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- OSHXONA BOG'I -->
+        <section id="kitchen" class="py-16 bg-lime-50 rounded-2xl px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-800" data-i18n="kitchen.title">Oshxona Bog'i 🌿🍳</h2>
+                <p class="mt-4 text-slate-500" data-i18n="kitchen.subtitle">Rayhon, ukrop, yalpiz - oshxonangizda doim
+                    yangi ko'kat!</p>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-6" data-i18n="kitchen.plants">🪴 Oshxonaga mos o'simliklar
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="card p-4 rounded-xl">
+                    <div class="bg-emerald-100 h-40 rounded-lg mb-3 flex items-center justify-center text-5xl">🌿</div>
+                    <h4 class="font-bold mb-2" data-i18n="kitchen.basil">Rayhon ko'chati</h4>
+                    <p class="text-sm text-slate-600 mb-2" data-i18n="kitchen.basilDesc">Kichik idishda, oshxonaga mos
+                    </p>
+                    <p class="text-green-700 font-bold text-lg mb-2">8,000 <span data-i18n="common.sum">so'm</span></p>
+                    <button class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
+                        data-i18n="shop.addToCart">Savatga</button>
+                </div>
+                <div class="card p-4 rounded-xl">
+                    <div class="bg-emerald-100 h-40 rounded-lg mb-3 flex items-center justify-center text-5xl">🌱</div>
+                    <h4 class="font-bold mb-2" data-i18n="kitchen.dill">Ukrop ko'chati</h4>
+                    <p class="text-sm text-slate-600 mb-2" data-i18n="kitchen.dillDesc">Tez o'sadi, oson parvarish</p>
+                    <p class="text-green-700 font-bold text-lg mb-2">6,000 <span data-i18n="common.sum">so'm</span></p>
+                    <button class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
+                        data-i18n="shop.addToCart">Savatga</button>
+                </div>
+                <div class="card p-4 rounded-xl">
+                    <div class="bg-emerald-100 h-40 rounded-lg mb-3 flex items-center justify-center text-5xl">🍃</div>
+                    <h4 class="font-bold mb-2" data-i18n="kitchen.mint">Yalpiz ko'chati</h4>
+                    <p class="text-sm text-slate-600 mb-2" data-i18n="kitchen.mintDesc">Choy uchun ideal</p>
+                    <p class="text-green-700 font-bold text-lg mb-2">7,000 <span data-i18n="common.sum">so'm</span></p>
+                    <button class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
+                        data-i18n="shop.addToCart">Savatga</button>
+                </div>
+                <div class="card p-4 rounded-xl">
+                    <div class="bg-emerald-100 h-40 rounded-lg mb-3 flex items-center justify-center text-5xl">🥬</div>
+                    <h4 class="font-bold mb-2" data-i18n="kitchen.parsley">Petrushka ko'chati</h4>
+                    <p class="text-sm text-slate-600 mb-2" data-i18n="kitchen.parsleyDesc">Vitaminlarga boy</p>
+                    <p class="text-green-700 font-bold text-lg mb-2">5,000 <span data-i18n="common.sum">so'm</span></p>
+                    <button class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
+                        data-i18n="shop.addToCart">Savatga</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- KATALOG -->
+        <section id="catalog" class="py-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-800" data-i18n="catalog.title">Mahsulotlar katalogi 🌱</h2>
+                <p class="mt-4 text-slate-500" data-i18n="catalog.subtitle">Sizning hududingizga mos keladigan o'simlik
+                    turlari</p>
+            </div>
+            <div class="mb-8">
+                <input type="text" class="w-full max-w-md px-4 py-3 border border-green-300 rounded-lg"
+                    data-i18n-ph="catalog.search" placeholder="Mahsulot nomini kiriting...">
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="card p-6 rounded-xl">
+                    <div class="text-6xl mb-4 text-center">🌳</div>
+                    <h3 class="text-xl font-bold mb-2" data-i18n="catalog.chinor">Chinor</h3>
+                    <p class="text-slate-600 mb-4" data-i18n="catalog.chinorDesc">Ushbu daraxt tez o'sadi, soyasi qalin.
+                    </p>
+                    <p class="text-green-700 font-bold text-xl mb-4">150,000 <span data-i18n="common.sum">so'm</span>
+                    </p>
+                    <button class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 font-bold"
+                        data-i18n="catalog.addToCart">Savatga qo'shish</button>
+                </div>
+                <div class="card p-6 rounded-xl">
+                    <div class="text-6xl mb-4 text-center">🍏</div>
+                    <h3 class="text-xl font-bold mb-2" data-i18n="catalog.olma">Olmali daraxt</h3>
+                    <p class="text-slate-600 mb-4" data-i18n="catalog.olmaDesc">Meva beruvchi daraxt.</p>
+                    <p class="text-green-700 font-bold text-xl mb-4">120,000 <span data-i18n="common.sum">so'm</span>
+                    </p>
+                    <button class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 font-bold"
+                        data-i18n="catalog.addToCart">Savatga qo'shish</button>
+                </div>
+                <div class="card p-6 rounded-xl">
+                    <div class="text-6xl mb-4 text-center">🌸</div>
+                    <h3 class="text-xl font-bold mb-2" data-i18n="catalog.atirgul">Atirgul butasi</h3>
+                    <p class="text-slate-600 mb-4" data-i18n="catalog.atirgulDesc">Bog'larga chiroy beruvchi.</p>
+                    <p class="text-green-700 font-bold text-xl mb-4">45,000 <span data-i18n="common.sum">so'm</span></p>
+                    <button class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 font-bold"
+                        data-i18n="catalog.addToCart">Savatga qo'shish</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- MAVSUMIY -->
+        <section id="seasonal" class="py-16 bg-green-50 rounded-2xl px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-800" data-i18n="seasonal.title">Mavsumiy Eslatgich 📅🌱</h2>
+                <p class="mt-4 text-slate-500" data-i18n="seasonal.subtitle">Har bir mavsumda nima qilish kerakligini
+                    bilib oling</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card p-8 rounded-xl">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="text-5xl">🌸</div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-green-700" data-i18n="seasonal.spring">Bahor (Mart-May)
+                            </h3>
+                            <p class="text-sm text-slate-500" data-i18n="seasonal.springDesc">Ekish va ko'chatlar
+                                mavsumi</p>
+                        </div>
+                    </div>
+                    <ul class="space-y-2 text-slate-700">
+                        <li>✓ <span data-i18n="seasonal.springTip1">Mevali daraxtlarni eking</span></li>
+                        <li>✓ <span data-i18n="seasonal.springTip2">Sabzavot ko'chatlarini eking</span></li>
+                        <li>✓ <span data-i18n="seasonal.springTip3">O'g'it bering</span></li>
+                    </ul>
+                </div>
+                <div class="card p-8 rounded-xl">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="text-5xl">☀️</div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-yellow-600" data-i18n="seasonal.summer">Yoz (Iyun-Avgust)
+                            </h3>
+                            <p class="text-sm text-slate-500" data-i18n="seasonal.summerDesc">Sug'orish va parvarish
+                                mavsumi</p>
+                        </div>
+                    </div>
+                    <ul class="space-y-2 text-slate-700">
+                        <li>✓ <span data-i18n="seasonal.summerTip1">Muntazam sug'oring</span></li>
+                        <li>✓ <span data-i18n="seasonal.summerTip2">Begona o'tlarni olib tashlang</span></li>
+                        <li>✓ <span data-i18n="seasonal.summerTip3">Zararkunandalarga qarshi kurashing</span></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- QANDAY ISHLAYDI -->
+        <section id="how" class="py-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-800" data-i18n="howItWorks.title">Qanday ishlaydi? ⚙️</h2>
+                <p class="mt-4 text-slate-500" data-i18n="howItWorks.subtitle">Oddiy qadamlar bilan yashil harakatga
+                    qo'shiling</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="text-center p-6 card rounded-xl">
+                    <div
+                        class="w-16 h-16 rounded-full bg-green-200 text-green-700 flex items-center justify-center text-2xl font-bold mx-auto border-2 border-green-400">
+                        1</div>
+                    <h3 class="font-semibold mt-4 text-xl" data-i18n="howItWorks.step1">Ro'yxatdan o'ting</h3>
+                    <p class="text-sm text-slate-500 mt-2" data-i18n="howItWorks.step1Desc">Profilingizni yarating</p>
+                </div>
+                <div class="text-center p-6 card rounded-xl">
+                    <div
+                        class="w-16 h-16 rounded-full bg-green-200 text-green-700 flex items-center justify-center text-2xl font-bold mx-auto border-2 border-green-400">
+                        2</div>
+                    <h3 class="font-semibold mt-4 text-xl" data-i18n="howItWorks.step2">Daraxt tanlang</h3>
+                    <p class="text-sm text-slate-500 mt-2" data-i18n="howItWorks.step2Desc">Hududingizga mos daraxt
+                        tanlang</p>
+                </div>
+                <div class="text-center p-6 card rounded-xl">
+                    <div
+                        class="w-16 h-16 rounded-full bg-green-200 text-green-700 flex items-center justify-center text-2xl font-bold mx-auto border-2 border-green-400">
+                        3</div>
+                    <h3 class="font-semibold mt-4 text-xl" data-i18n="howItWorks.step3">Buyurtma bering</h3>
+                    <p class="text-sm text-slate-500 mt-2" data-i18n="howItWorks.step3Desc">Onlayn to'lov qiling</p>
+                </div>
+                <div class="text-center p-6 card rounded-xl">
+                    <div
+                        class="w-16 h-16 rounded-full bg-green-200 text-green-700 flex items-center justify-center text-2xl font-bold mx-auto border-2 border-green-400">
+                        4</div>
+                    <h3 class="font-semibold mt-4 text-xl" data-i18n="howItWorks.step4">Eking va kuzating</h3>
+                    <p class="text-sm text-slate-500 mt-2" data-i18n="howItWorks.step4Desc">Daraxtingizni eking</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI MASLAHATCHI -->
+        <section id="ai" class="py-16 bg-blue-50 rounded-2xl px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-800" data-i18n="ai.title">AI Bog'bon (24/7 maslahatchi)</h2>
+                <p class="mt-4 text-slate-500" data-i18n="ai.subtitle">Sun'iy intellektdan foydalaning</p>
+            </div>
+            <div class="max-w-2xl mx-auto card p-8 rounded-xl">
+                <p class="text-slate-600 mb-4" data-i18n="ai.inputLabel">Iqlim sharoitingizni tasvirlang:</p>
+                <div class="flex gap-4">
+                    <input type="text" class="flex-1 px-4 py-2 border border-green-300 rounded-lg"
+                        data-i18n-ph="ai.placeholder" placeholder="Hududingizni kiriting...">
+                    <button class="bg-green-700 text-white font-semibold py-2 px-6 rounded-lg hover:bg-green-800"
+                        data-i18n="ai.btn">Tavsiya olish</button>
+                </div>
+                <div class="mt-6 p-4 bg-slate-50 rounded-lg">
+                    <p class="text-slate-700" data-i18n="ai.response">Tavsiyalar bu yerda paydo bo'ladi...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ALOQA -->
+        <section id="contact" class="py-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-800" data-i18n="contact.title">Biz bilan bog'laning 📞</h2>
+                <p class="mt-4 text-slate-500" data-i18n="contact.subtitle">Savollaringiz bo'lsa, bizga murojaat qiling
+                </p>
+            </div>
+            <div class="max-w-md mx-auto card p-8 rounded-xl">
+                <form class="space-y-4">
+                    <div>
+                        <label for="contact-name" class="block text-sm font-medium text-slate-700" data-i18n="contact.name">Ism</label>
+                        <input
+                            type="text"
+                            id="contact-name"
+                            name="contact-name"
+                            class="mt-1 block w-full rounded-md border-green-300 shadow-sm px-4 py-2 border"
+                            placeholder="Ismingiz"
+                            title="Ismingizni kiriting">
+                    </div>
+                    <div>
+                        <label for="contact-email" class="block text-sm font-medium text-slate-700" data-i18n="contact.email">Email</label>
+                        <input type="email"
+                            id="contact-email"
+                            name="contact-email"
+                            class="mt-1 block w-full rounded-md border-green-300 shadow-sm px-4 py-2 border"
+                            aria-label="Email manzil">
+                    </div>
+                    <div>
+                        <label for="contact-message" class="block text-sm font-medium text-slate-700"
+                            data-i18n="contact.message">Xabar</label>
+                        <textarea id="contact-message"
+                            name="contact-message"
+                            rows="4"
+                            class="mt-1 block w-full rounded-md border-green-300 shadow-sm px-4 py-2 border"
+                            aria-label="Xabar matni"></textarea>
+                    </div>
+                    <button type="submit"
+                        class="w-full bg-green-700 text-white font-bold py-3 rounded-lg hover:bg-green-800"
+                        data-i18n="contact.send">Yuborish</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- BUYURTMALAR -->
+        <section id="orders" class="py-16 bg-green-50 rounded-2xl px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-800" data-i18n="orders.title">Mening buyurtmalarim 📦</h2>
+                <p class="mt-4 text-slate-500" data-i18n="orders.subtitle">Barcha buyurtmalaringiz va ularning holati
+                </p>
+            </div>
+            <div class="text-center py-12">
+                <div class="text-6xl mb-4">📦</div>
+                <p class="text-xl text-slate-600 font-semibold" data-i18n="orders.noOrders">Buyurtmalar yo'q</p>
+                <p class="text-sm text-slate-500 mt-2" data-i18n="orders.noOrdersDesc">Siz hali buyurtma bermagansiz</p>
+                <a href="#catalog"
+                    class="inline-block mt-4 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
+                    data-i18n="orders.goToCatalog">Katalogga o'tish</a>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-800 text-white py-8 mt-16">
+        <div class="container mx-auto px-6 text-center">
+            <p data-i18n="footer.copyright">© 2024 GreenMarket. Barcha huquqlar himoyalangan.</p>
+        </div>
+    </footer>
+
+    <!-- Til tizimi -->
+    <script src="lang/lang.js"></script>
+</body>
+
+</html>

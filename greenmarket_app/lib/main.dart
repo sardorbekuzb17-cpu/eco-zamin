@@ -11,6 +11,7 @@ import 'data/products.dart';
 import 'screens/gardener_ai_screen.dart';
 import 'screens/checkout_screen.dart';
 import 'screens/myid_login_screen.dart';
+import 'screens/myid_login_screen_v2.dart';
 import 'services/notification_service.dart';
 import 'services/ad_service.dart';
 import 'services/version_service.dart';
@@ -117,7 +118,7 @@ class AuthWrapper extends StatelessWidget {
           return const HomePage();
         }
 
-        return const MyIDLoginScreen();
+        return const MyIDLoginScreenV2();
       },
     );
   }

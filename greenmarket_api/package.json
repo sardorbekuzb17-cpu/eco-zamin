@@ -1,0 +1,14 @@
+{
+    "name": "greenmarket-api",
+    "version": "1.0.0",
+    "description": "Green Market API for likes",
+    "engines": {
+        "node": "20.x"
+    },
+    "scripts": {
+        "dev": "vercel dev"
+    },
+    "dependencies": {
+        "@vercel/kv": "^2.0.0"
+    }
+}

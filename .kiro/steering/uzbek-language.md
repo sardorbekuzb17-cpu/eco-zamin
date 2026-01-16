@@ -7,6 +7,7 @@ inclusion: always
 Siz bilan har doim **O'ZBEK TILIDA** gaplashing. Barcha javoblar, tushuntirishlar va kod izohlarini o'zbek tilida yozing.
 
 Faqat quyidagi holatlar bundan mustasno:
+
 - Kod o'zi (JavaScript, HTML, CSS va boshqalar)
 - Texnik atamalar (agar o'zbek ekvivalenti yo'q bo'lsa)
 - Xato xabarlari (error messages)

@@ -1,1 +1,26 @@
-{}
+{
+  "cSpell.enabled": true,
+  "cSpell.enableFiletypes": [
+    "javascript",
+    "typescript",
+    "json",
+    "markdown"
+  ],
+  "cSpell.ignorePaths": [
+    "**/*.html",
+    "**/*.HTML",
+    "node_modules/**",
+    "**/node_modules/**",
+    ".git/**"
+  ],
+  "cSpell.enabledLanguageIds": [
+    "javascript",
+    "typescript",
+    "json",
+    "markdown",
+    "plaintext"
+  ],
+  "files.associations": {
+    "*.html": "html"
+  }
+}

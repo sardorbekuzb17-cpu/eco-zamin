@@ -9,7 +9,7 @@ app.use(cors());
 // MyID credentials (shartnomadan)
 const CLIENT_ID = 'quyosh_24_sdk-OYD9rRoHYRjJkpQ2LQNV0EG6KSXtKruUMkOCdY1v';
 const CLIENT_SECRET = 'JRgNV6Av8DlocKJIAozwUrx4uCOU9mDLy5D9SKsEF6EvG2VlD7FU8nup5AYlU3biDfNwOEB0S54Sgup3CB3aJNJuk2wIkG3AIOlP';
-const MYID_HOST = 'https://api.devmyid.uz';
+const MYID_HOST = 'https://api.myid.uz'; // Production
 
 let bearerToken = null;
 let tokenExpiry = null;

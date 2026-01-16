@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyID Callback - GreenMarket</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .callback-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2ecc71;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        h2 {
+            color: #2ecc71;
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #666;
+        }
+
+        .error {
+            color: #e74c3c;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="callback-container">
+        <div class="spinner"></div>
+        <h2>Autentifikatsiya...</h2>
+        <p>Iltimos, kuting. Sizning ma'lumotlaringiz tekshirilmoqda.</p>
+        <p class="error" id="error" style="display: none;"></p>
+    </div>
+
+    <script src="myid_integration.js"></script>
+    <script>
+        // URL parametrlarini olish
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        const error = urlParams.get('error');
+
+        // MyID instance
+        const myid = new MyIDAuth({
+            clientId: 'greenmarket_test',
+            redirectUri: window.location.origin + '/myid_callback.html',
+            scope: 'address,contacts,doc_data,common_data'
+        });
+
+        // Callback'ni qayta ishlash
+        async function handleCallback() {
+            if (error) {
+                showError('Autentifikatsiya bekor qilindi: ' + error);
+                setTimeout(() => {
+                    window.location.href = '/myid_login.html';
+                }, 3000);
+                return;
+            }
+
+            if (!code || !state) {
+                showError('Noto\'g\'ri callback parametrlari');
+                setTimeout(() => {
+                    window.location.href = '/myid_login.html';
+                }, 3000);
+                return;
+            }
+
+            try {
+                // Token va foydalanuvchi ma'lumotlarini olish
+                const userData = await myid.handleCallback(code, state);
+
+                console.log('Foydalanuvchi muvaffaqiyatli tizimga kirdi:', userData);
+
+                // Bosh sahifaga yo'naltirish
+                setTimeout(() => {
+                    window.location.href = '/index.html';
+                }, 1000);
+
+            } catch (err) {
+                console.error('Callback xatolik:', err);
+                showError('Autentifikatsiyada xatolik yuz berdi: ' + err.message);
+                setTimeout(() => {
+                    window.location.href = '/myid_login.html';
+                }, 3000);
+            }
+        }
+
+        function showError(message) {
+            const errorElement = document.getElementById('error');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            document.querySelector('.spinner').style.display = 'none';
+        }
+
+        // Sahifa yuklanganda callback'ni qayta ishlash
+        handleCallback();
+    </script>
+</body>
+
+</html>

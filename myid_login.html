@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyID Kirish - GreenMarket</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #2ecc71;
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .myid-button {
+            background: linear-gradient(135deg, #0066cc 0%, #004c99 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 102, 204, 0.4);
+            text-decoration: none;
+        }
+
+        .myid-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 102, 204, 0.6);
+        }
+
+        .myid-logo {
+            width: 30px;
+            height: 30px;
+            background: white;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #0066cc;
+        }
+
+        .divider {
+            margin: 30px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #999;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #ddd;
+        }
+
+        .traditional-login {
+            margin-top: 20px;
+        }
+
+        .traditional-login input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+        }
+
+        .traditional-login button {
+            width: 100%;
+            background: #2ecc71;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .traditional-login button:hover {
+            background: #27ae60;
+        }
+
+        .user-info {
+            display: none;
+            text-align: left;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .user-info.active {
+            display: block;
+        }
+
+        .user-info h3 {
+            color: #2ecc71;
+            margin-bottom: 15px;
+        }
+
+        .user-info p {
+            margin: 8px 0;
+            color: #333;
+        }
+
+        .logout-button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .benefits {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .benefits h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .benefit-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+            color: #666;
+        }
+
+        .benefit-item::before {
+            content: '✓';
+            color: #2ecc71;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="logo">🌱</div>
+        <h1>GreenMarket</h1>
+        <p>Ekologik bozor platformasiga xush kelibsiz</p>
+
+        <!-- MyID tugmasi -->
+        <button class="myid-button" onclick="loginWithMyID()">
+            <div class="myid-logo">ID</div>
+            MyID orqali kirish
+        </button>
+
+        <div class="divider">yoki</div>
+
+        <!-- An'anaviy kirish -->
+        <div class="traditional-login">
+            <input type="tel" placeholder="Telefon raqam" id="phone">
+            <input type="password" placeholder="Parol" id="password">
+            <button onclick="traditionalLogin()">Kirish</button>
+        </div>
+
+        <!-- Foydalanuvchi ma'lumotlari -->
+        <div class="user-info" id="userInfo">
+            <h3>Foydalanuvchi ma'lumotlari</h3>
+            <div id="userData"></div>
+            <button class="logout-button" onclick="logout()">Chiqish</button>
+        </div>
+
+        <!-- Afzalliklar -->
+        <div class="benefits">
+            <h3>MyID orqali kirish afzalliklari:</h3>
+            <div class="benefit-item">Tez va xavfsiz autentifikatsiya</div>
+            <div class="benefit-item">Ma'lumotlar avtomatik to'ldiriladi</div>
+            <div class="benefit-item">Parol eslab qolish shart emas</div>
+            <div class="benefit-item">Davlat tomonidan tasdiqlangan</div>
+        </div>
+    </div>
+
+    <script src="myid_integration.js"></script>
+    <script>
+        // MyID konfiguratsiyasi
+        const myid = new MyIDAuth({
+            clientId: 'greenmarket_test', // O'z client_id'ingizni kiriting
+            redirectUri: window.location.origin + '/myid_callback.html',
+            scope: 'address,contacts,doc_data,common_data'
+        });
+
+        // Sahifa yuklanganda foydalanuvchi kirganmi tekshirish
+        window.onload = function () {
+            if (myid.isAuthenticated()) {
+                showUserInfo();
+            }
+        };
+
+        // MyID orqali kirish
+        function loginWithMyID() {
+            myid.login();
+        }
+
+        // An'anaviy kirish
+        function traditionalLogin() {
+            const phone = document.getElementById('phone').value;
+            const password = document.getElementById('password').value;
+
+            if (!phone || !password) {
+                alert('Iltimos, barcha maydonlarni to\'ldiring');
+                return;
+            }
+
+            // Bu yerda backend API ga so'rov yuboriladi
+            console.log('Traditional login:', phone);
+            alert('An\'anaviy kirish hozircha ishlamaydi. MyID dan foydalaning.');
+        }
+
+        // Foydalanuvchi ma'lumotlarini ko'rsatish
+        function showUserInfo() {
+            const user = myid.getCurrentUser();
+            if (user) {
+                const userDataHtml = `
+                    <p><strong>F.I.O:</strong> ${user.fullName}</p>
+                    <p><strong>JSHSHIR:</strong> ${user.pin}</p>
+                    <p><strong>Tug'ilgan sana:</strong> ${user.birthDate}</p>
+                    <p><strong>Telefon:</strong> ${user.phone || 'Kiritilmagan'}</p>
+                    <p><strong>Email:</strong> ${user.email || 'Kiritilmagan'}</p>
+                    <p><strong>Manzil:</strong> ${user.address?.region}, ${user.address?.district}</p>
+                `;
+
+                document.getElementById('userData').innerHTML = userDataHtml;
+                document.getElementById('userInfo').classList.add('active');
+
+                // Kirish formalarini yashirish
+                document.querySelector('.myid-button').style.display = 'none';
+                document.querySelector('.divider').style.display = 'none';
+                document.querySelector('.traditional-login').style.display = 'none';
+            }
+        }
+
+        // Chiqish
+        function logout() {
+            myid.logout();
+            location.reload();
+        }
+    </script>
+</body>
+
+</html>

@@ -3,6 +3,7 @@ import 'package:myid/myid.dart';
 import 'package:myid/myid_config.dart';
 import 'package:myid/enums.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 import 'dart:convert';
 import 'home_screen.dart';
 
@@ -41,11 +42,12 @@ class _MyIDLoginScreenV2State extends State<MyIDLoginScreenV2> {
     });
 
     try {
-      // Backend'dan session ma'lumotlarini olish kerak
-      const sessionId = 'test_session_${DateTime.now().millisecondsSinceEpoch}';
+      // UUID formatida sessionId yaratish
+      const uuid = Uuid();
+      final sessionId = uuid.v4();
       const clientHash =
-          'quyosh_24_sdk-OYD9rRoHYRjJkpQ2LQNV0EG6KSXtKruUMkOCdY1v';
-      const clientHashId = 'quyosh_24_sdk';
+          'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5wQYaS8i1b0Rj5wuJLhIyDuTW/WoWB/kRbJCBHFLyFTxETADNa/CU+xw0moN9X10+MVD5kRMinMRQpGUVCrUXjUAEjwbdaCSLR6suRYI1EfDMQ5XFdJsfkAlNzZyyfBlif4OA4qxaMtdyvJCa/8nwHn2KC89BNhqBQMre7iLaW8Z9bArSulSxBJzbzPjd7Jkg4ccQ47bVyjEKBcu/1KXUd/audUr1WsUpBf9yvgSTDRG2cuVXpMGEBJAqrsCS3RtIt7pEnGtr5FsB+UmBec9Ei97fK2LcVfWpc/m7WjWMz3mku/pmhSjC6Vl6dlOrP1dv/fJkhfh3axzXtZoxgV1QwIDAQAB';
+      const clientHashId = 'ac6d0f4a-5d5b-44e3-a865-9159a3146a8c';
 
       final myIdResult = await MyIdClient.start(
         config: MyIdConfig(
@@ -57,10 +59,9 @@ class _MyIDLoginScreenV2State extends State<MyIDLoginScreenV2> {
         ),
       );
 
-      if (myIdResult != null && myIdResult.code != null) {
+      if (myIdResult.code != null) {
         final userData = {
           'code': myIdResult.code,
-          'comparison_value': myIdResult.comparisonValue,
           'timestamp': DateTime.now().toIso8601String(),
         };
 

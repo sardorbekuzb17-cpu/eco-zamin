@@ -10,14 +10,14 @@ import 'data/regions.dart';
 import 'data/products.dart';
 import 'screens/gardener_ai_screen.dart';
 import 'screens/checkout_screen.dart';
-import 'screens/myid_login_screen.dart';
-import 'screens/myid_login_screen_v2.dart';
 import 'services/notification_service.dart';
 import 'services/ad_service.dart';
 import 'services/version_service.dart';
 import 'services/security_service.dart';
-import 'services/myid_service.dart';
+import 'services/myid_backend_service.dart';
 import 'widgets/force_update_dialog.dart';
+
+import 'screens/myid_simple_login.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -95,6 +95,10 @@ class _GreenMarketAppState extends State<GreenMarketApp> {
         ),
       ),
       home: const AuthWrapper(),
+      routes: {
+        '/home': (context) => const HomePage(),
+        '/login': (context) => const MyIdSimpleLogin(),
+      },
     );
   }
 }
@@ -106,7 +110,7 @@ class AuthWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
-      future: MyIDService.isAuthenticated(),
+      future: _checkAuthentication(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -118,9 +122,15 @@ class AuthWrapper extends StatelessWidget {
           return const HomePage();
         }
 
-        return const MyIDLoginScreenV2();
+        return const MyIdSimpleLogin();
       },
     );
+  }
+
+  Future<bool> _checkAuthentication() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userData = prefs.getString('user_data');
+    return userData != null;
   }
 }
 
@@ -144,6 +154,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   // Mavsumiy eslatgichlar
   bool _seasonalRemindersEnabled = false;
+
+  // MyID autentifikatsiya holati
+  bool _isLoggedIn = false;
+  Map<String, dynamic>? _userData;
 
   // Bildirishnomalar uchun
   final List<Map<String, dynamic>> _notifications = [
@@ -212,6 +226,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     _loadSeasonalRemindersStatus();
     _checkForUpdate(); // Versiyani tekshirish
     _startSecurityMonitoring(); // Xavfsizlik monitoringi
+    _checkLoginStatus(); // MyID holatini tekshirish
   }
 
   // Davriy xavfsizlik tekshiruvi
@@ -1821,14 +1836,65 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           ),
           const SizedBox(height: 16),
           Text(
-            l10n.translate('guest'),
+            _isLoggedIn && _userData != null
+                ? _userData!['name'] ?? 'Foydalanuvchi'
+                : l10n.translate('guest'),
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Color(0xFF1A2E1A),
             ),
           ),
+          if (_isLoggedIn &&
+              _userData != null &&
+              _userData!['phone'] != null &&
+              _userData!['phone'].toString().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                _userData!['phone'],
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              ),
+            ),
           const SizedBox(height: 32),
+
+          // MyID orqali kirish yoki chiqish
+          if (!_isLoggedIn)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: _loginWithMyID,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0066cc),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 2,
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.login, size: 24),
+                      SizedBox(width: 12),
+                      Text(
+                        'Profilga kirish',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+          if (!_isLoggedIn) const SizedBox(height: 32),
+
           // Menu items
           _buildProfileMenuItem(
             Icons.favorite_outline,
@@ -1857,6 +1923,41 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             l10n.translate('about'),
             () {},
           ),
+
+          // Chiqish tugmasi (agar kirgan bo'lsa)
+          if (_isLoggedIn)
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: OutlinedButton(
+                  onPressed: _logout,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    side: const BorderSide(color: Colors.red),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.logout),
+                      SizedBox(width: 8),
+                      Text(
+                        'Chiqish',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
           const SizedBox(height: 100),
         ],
       ),
@@ -1934,6 +2035,319 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     setState(() {
       _seasonalRemindersEnabled = status;
     });
+  }
+
+  // MyID login holatini tekshirish
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userData = prefs.getString('user_data');
+
+    if (userData != null) {
+      setState(() {
+        _isLoggedIn = true;
+        _userData = json.decode(userData);
+      });
+    }
+  }
+
+  // MyID orqali kirish
+  Future<void> _loginWithMyID() async {
+    // Pasport va tug'ilgan sana bilan login dialog
+    final TextEditingController nameController = TextEditingController();
+    final TextEditingController passportSeriesController =
+        TextEditingController();
+    final TextEditingController passportNumberController =
+        TextEditingController();
+    final TextEditingController birthDateController = TextEditingController();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.badge, color: Color(0xFF15803D)),
+            SizedBox(width: 8),
+            Text('Profilga kirish'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: 'Ism va Familiya',
+                  hintText: 'Masalan: Sardor Karimov',
+                  prefixIcon: const Icon(Icons.person),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: TextField(
+                      controller: passportSeriesController,
+                      decoration: InputDecoration(
+                        labelText: 'Seriya',
+                        hintText: 'AA',
+                        prefixIcon: const Icon(Icons.credit_card),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      textCapitalization: TextCapitalization.characters,
+                      maxLength: 2,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 3,
+                    child: TextField(
+                      controller: passportNumberController,
+                      decoration: InputDecoration(
+                        labelText: 'Raqam',
+                        hintText: '1234567',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      keyboardType: TextInputType.number,
+                      maxLength: 7,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: birthDateController,
+                decoration: InputDecoration(
+                  labelText: 'Tug\'ilgan sana',
+                  hintText: 'KK.OO.YYYY',
+                  prefixIcon: const Icon(Icons.calendar_today),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                keyboardType: TextInputType.datetime,
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime(2000),
+                    firstDate: DateTime(1940),
+                    lastDate: DateTime.now(),
+                  );
+                  if (date != null) {
+                    birthDateController.text =
+                        '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
+                  }
+                },
+                readOnly: true,
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.blue[700], size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Ma\'lumotlaringiz xavfsiz saqlanadi',
+                        style: TextStyle(color: Colors.blue[700], fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Bekor qilish'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (nameController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Iltimos, ism va familiyangizni kiriting'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+                return;
+              }
+              if (passportSeriesController.text.trim().isEmpty ||
+                  passportNumberController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Iltimos, pasport ma\'lumotlarini kiriting'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+                return;
+              }
+              if (birthDateController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Iltimos, tug\'ilgan sanangizni kiriting'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+                return;
+              }
+              Navigator.pop(context, true);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF15803D),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text('Kirish'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      // Loading dialog ko'rsatish
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: Card(
+              child: Padding(
+                padding: EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('MyID orqali tekshirilmoqda...'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      // Backend orqali pasport tekshirish
+      final backendResponse = await MyIdBackendService.verifyPassport(
+        passportSeries: passportSeriesController.text.trim().toUpperCase(),
+        passportNumber: passportNumberController.text.trim(),
+        birthDate: birthDateController.text.trim(),
+      );
+
+      // Loading dialog yopish
+      if (mounted) {
+        Navigator.pop(context);
+      }
+
+      // Backend javobini tekshirish
+      if (backendResponse['success'] == true) {
+        // Backend muvaffaqiyatli javob berdi
+        final userData = {
+          'name': nameController.text.trim(),
+          'passport':
+              '${passportSeriesController.text.trim().toUpperCase()}${passportNumberController.text.trim()}',
+          'birthDate': birthDateController.text.trim(),
+          'timestamp': DateTime.now().toIso8601String(),
+          'verified': true, // Backend orqali tasdiqlangan
+          'verificationData': backendResponse['data'],
+        };
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_data', json.encode(userData));
+
+        setState(() {
+          _isLoggedIn = true;
+          _userData = userData;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '✅ MyID orqali tasdiqlandi! Xush kelibsiz, ${userData['name']}!',
+              ),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      } else {
+        // Backend xato qaytardi - lekin local saqlaymiz
+        final userData = {
+          'name': nameController.text.trim(),
+          'passport':
+              '${passportSeriesController.text.trim().toUpperCase()}${passportNumberController.text.trim()}',
+          'birthDate': birthDateController.text.trim(),
+          'timestamp': DateTime.now().toIso8601String(),
+          'verified': false, // Backend orqali tasdiqlanmagan
+        };
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_data', json.encode(userData));
+
+        setState(() {
+          _isLoggedIn = true;
+          _userData = userData;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '⚠️ MyID tekshiruvida xatolik: ${backendResponse['error']}\nLekin mahalliy saqlandingiz.',
+              ),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
+    }
+
+    nameController.dispose();
+    passportSeriesController.dispose();
+    passportNumberController.dispose();
+    birthDateController.dispose();
+  }
+
+  // Chiqish
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_data');
+    await prefs.remove('myid_code');
+
+    setState(() {
+      _isLoggedIn = false;
+      _userData = null;
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tizimdan chiqdingiz'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
   }
 
   Widget _buildBottomNav() {

@@ -167,7 +167,7 @@ app.get('/health', (req, res) => {
 app.get('/', (req, res) => {
     res.json({
         name: 'GreenMarket MyID Backend',
-        version: '2.0.0',
+        version: '3.0.0', // Yangi flow API
         myid_host: MYID_HOST,
         endpoints: {
             health: 'GET /health',

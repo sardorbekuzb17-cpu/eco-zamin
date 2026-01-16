@@ -7,7 +7,7 @@ import 'dart:math';
 class MyIDService {
   static const String _baseUrl = 'https://sso.egov.uz';
   static const String _clientId =
-      'greenmarket_mobile'; // O'z client_id'ingizni kiriting
+      'quyosh_24_sdk-OYD9rRoHYRjJkpQ2LQNV0EG6KSXtKruUMkOCdY1v';
   static const String _redirectUri = 'greenmarket://myid_callback';
   static const String _scope = 'address,contacts,doc_data,common_data';
 

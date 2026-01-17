@@ -40,19 +40,28 @@ dependencies:
   google_mobile_ads: ^5.2.0
   package_info_plus: ^8.0.0
   url_launcher: ^6.3.0
+  dio: ^5.4.0
+  flutter_secure_storage: ^9.0.0
+  webview_flutter: ^4.4.0
+  json_annotation: ^4.8.1
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   crypto: ^3.0.7
-  myid: ^3.1.41
+  myid:
+    path: ../myid-3.1.41
   uuid: ^4.5.2
+  base32: ^2.1.3
+  # safe_device: ^1.1.8  # Vaqtincha o'chirildi - crash sababi
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_launcher_icons: ^0.14.3
   yaml: ^3.1.2
+  build_runner: ^2.4.6
+  json_serializable: ^6.7.1
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

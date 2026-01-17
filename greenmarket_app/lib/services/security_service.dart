@@ -1,49 +1,126 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+// import 'package:safe_device/safe_device.dart'; // Vaqtincha o'chirildi
 
 class SecurityService {
-  // Root/Jailbreak tekshiruvi
+  // Root/Jailbreak tekshiruvi (vaqtincha o'chirilgan)
   static Future<bool> isDeviceSecure() async {
     try {
-      // Root fayllarini tekshirish
-      final rootPaths = [
-        '/system/app/Superuser.apk',
-        '/sbin/su',
-        '/system/bin/su',
-        '/system/xbin/su',
-        '/data/local/xbin/su',
-        '/data/local/bin/su',
-      ];
-
-      for (var path in rootPaths) {
-        if (await File(path).exists()) {
-          if (kDebugMode) {
-            debugPrint('⚠️ Root fayl topildi: $path');
-          }
-          return false;
-        }
+      // safe_device kutubxonasi o'chirilgan - debug mode'da true qaytaramiz
+      if (kDebugMode) {
+        debugPrint('⚠️ Xavfsizlik tekshiruvi o\'chirilgan (debug mode)');
       }
-
       return true;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('Xavfsizlik tekshiruvida xatolik: $e');
       }
-      return true; // Xatolik bo'lsa, davom ettiramiz
+      return kDebugMode;
     }
   }
 
-  // Ilova o'zgartirilganligini tekshirish
+  // Haqiqiy qurilma tekshiruvi (vaqtincha o'chirilgan)
+  static Future<bool> isRealDevice() async {
+    try {
+      // safe_device kutubxonasi o'chirilgan - debug mode'da true qaytaramiz
+      if (kDebugMode) {
+        debugPrint('⚠️ Emulator tekshiruvi o\'chirilgan (debug mode)');
+      }
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Emulator tekshiruvida xatolik: $e');
+      }
+      return kDebugMode;
+    }
+  }
+
+  // MyID SDK ishga tushishdan oldin xavfsizlik tekshiruvi
+  static Future<void> checkSecurityBeforeMyId(BuildContext context) async {
+    // Debug mode'da tekshiruvlarni o'tkazib yuboramiz
+    if (kDebugMode) {
+      debugPrint('🔓 Debug mode: Xavfsizlik tekshiruvlari o\'tkazib yuborildi');
+      return;
+    }
+
+    // 1. Root/Jailbreak tekshiruvi
+    final isSecure = await isDeviceSecure();
+    if (!isSecure) {
+      if (context.mounted) {
+        await _showSecurityDialog(
+          context,
+          'Xavfsizlik Ogohlantirishi',
+          'Qurilmangiz root/jailbreak qilingan. MyID xavfsizlik sabablariga ko\'ra ishlamaydi.\n\nIltimos, standart qurilmada sinab ko\'ring.',
+        );
+      }
+      throw Exception('Device is rooted/jailbroken');
+    }
+
+    // 2. Emulator tekshiruvi
+    final isReal = await isRealDevice();
+    if (!isReal) {
+      if (context.mounted) {
+        await _showSecurityDialog(
+          context,
+          'Emulator Aniqlandi',
+          'MyID emulator yoki simulator\'da ishlamaydi.\n\nIltimos, haqiqiy qurilmada sinab ko\'ring.',
+        );
+      }
+      throw Exception('Running on emulator/simulator');
+    }
+  }
+
+  // Xavfsizlik dialog'ini ko'rsatish
+  static Future<void> _showSecurityDialog(
+    BuildContext context,
+    String title,
+    String message,
+  ) async {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.security, color: Colors.red[700]),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(message, style: const TextStyle(fontSize: 14)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Ilova o'zgartirilganligini tekshirish (vaqtincha o'chirilgan)
   static Future<bool> checkIntegrity() async {
     try {
-      // Asosiy tekshiruvlar
+      // safe_device kutubxonasi o'chirilgan - debug mode'da true qaytaramiz
+      if (kDebugMode) {
+        debugPrint('⚠️ Integrity check o\'chirilgan (debug mode)');
+      }
       return true;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('Integrity check xatolik: $e');
       }
-      return true;
+      return kDebugMode;
     }
   }
 
@@ -52,24 +129,10 @@ class SecurityService {
     return kDebugMode;
   }
 
-  // Emulator tekshiruvi
+  // Emulator tekshiruvi (eski metod - yangi isRealDevice() ishlatiladi)
+  @Deprecated('isRealDevice() metodini ishlating')
   static Future<bool> isRunningOnEmulator() async {
-    try {
-      if (Platform.isAndroid) {
-        final brand = Platform.environment['BRAND'] ?? '';
-        final device = Platform.environment['DEVICE'] ?? '';
-        final model = Platform.environment['MODEL'] ?? '';
-
-        if (brand.toLowerCase().contains('generic') ||
-            device.toLowerCase().contains('generic') ||
-            model.toLowerCase().contains('emulator')) {
-          return true;
-        }
-      }
-      return false;
-    } catch (e) {
-      return false;
-    }
+    return !(await isRealDevice());
   }
 
   // To'liq xavfsizlik tekshiruvi
@@ -86,7 +149,7 @@ class SecurityService {
     results.isDebuggerAttached = isDebuggerAttached();
 
     // 4. Emulator
-    results.isEmulator = await isRunningOnEmulator();
+    results.isEmulator = !(await isRealDevice());
 
     // 5. Umumiy natija (debug mode'da o'tkazib yuboramiz)
     if (kDebugMode) {

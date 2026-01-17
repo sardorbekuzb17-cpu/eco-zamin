@@ -1,0 +1,29 @@
+PODS:
+  - Flutter (1.0.0)
+  - myid (3.1.3):
+    - Flutter
+    - MyIdSDK (= 3.1.3)
+  - MyIdSDK (3.1.3)
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - myid (from `.symlinks/plugins/myid/ios`)
+
+SPEC REPOS:
+  trunk:
+    - MyIdSDK
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  myid:
+    :path: ".symlinks/plugins/myid/ios"
+
+SPEC CHECKSUMS:
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  myid: f2094311fb6bac4ddd85a2db33b3839dcfdd2548
+  MyIdSDK: 91a3ec894152550990a1ae0f758b3f6cc7aceeae
+
+PODFILE CHECKSUM: aa22143a7a6a2d5facc18760c8ed9dd4f1d4b3f8
+
+COCOAPODS: 1.16.2

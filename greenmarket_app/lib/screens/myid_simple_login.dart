@@ -45,9 +45,17 @@ QwIDAQAB
 
         if (errorDetails != null) {
           errorMsg += '\nStatus: ${errorDetails['status']}';
-          if (errorDetails['data'] != null) {
-            errorMsg += '\nXabar: ${errorDetails['data']}';
+          if (errorDetails['message'] != null) {
+            errorMsg += '\nXabar: ${errorDetails['message']}';
           }
+          if (errorDetails['url'] != null) {
+            errorMsg += '\nURL: ${errorDetails['url']}';
+          }
+          if (errorDetails['suggestion'] != null) {
+            errorMsg += '\n\n${errorDetails['suggestion']}';
+          }
+        } else if (sessionResponse['error'] != null) {
+          errorMsg += '\n${sessionResponse['error']}';
         }
 
         throw Exception(errorMsg);

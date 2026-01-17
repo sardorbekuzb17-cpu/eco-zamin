@@ -1,298 +1,119 @@
 import 'package:flutter/material.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../services/myid_service.dart';
-import 'home_screen.dart';
+import '../services/myid_services.dart';
+import '../config/myid_config.dart';
 
 class MyIDLoginScreen extends StatefulWidget {
-  const MyIDLoginScreen({super.key});
+  final Function(String, String) onCodeReceived; // code va state
+  final Function(String) onError;
+
+  const MyIDLoginScreen({
+    super.key,
+    required this.onCodeReceived,
+    required this.onError,
+  });
 
   @override
   State<MyIDLoginScreen> createState() => _MyIDLoginScreenState();
 }
 
 class _MyIDLoginScreenState extends State<MyIDLoginScreen> {
-  bool _isLoading = false;
+  late final WebViewController _controller;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _checkAuthentication();
+    _initializeWebView();
   }
 
-  // Foydalanuvchi allaqachon kirganmi tekshirish
-  Future<void> _checkAuthentication() async {
-    final isAuth = await MyIDService.isAuthenticated();
-    if (isAuth && mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
-    }
-  }
-
-  // MyID orqali kirish
-  Future<void> _loginWithMyID() async {
-    setState(() => _isLoading = true);
-
+  Future<void> _initializeWebView() async {
     try {
-      final authUrl = MyIDService.getAuthorizationUrl();
-      final uri = Uri.parse(authUrl);
+      final myIdService = MyIDService();
 
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      // State va code verifier yaratish va saqlash
+      final authUrl = await myIdService.generateAuthorizationUrl();
 
-        // Callback'ni kutish uchun listener qo'shish kerak
-        // Bu yerda deep link orqali callback qaytadi
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('MyID ochilmadi')));
-        }
-      }
+      // WebView controller sozlash
+      _controller = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setNavigationDelegate(
+          NavigationDelegate(
+            onNavigationRequest: (request) {
+              // Redirect URI ni tekshirish
+              if (request.url.startsWith(MyIDConfig.redirectUri)) {
+                // URL ni parse qilish
+                final uri = Uri.parse(request.url);
+                final code = uri.queryParameters['code'];
+                final state = uri.queryParameters['state'];
+                final error = uri.queryParameters['error'];
+
+                if (code != null && state != null) {
+                  // Code va state ni o'tkazish
+                  widget.onCodeReceived(code, state);
+                  Navigator.pop(context, true);
+                } else if (error != null) {
+                  // Xatoni o'tkazish
+                  widget.onError(error);
+                  Navigator.pop(context, false);
+                } else {
+                  widget.onError('Noma\'lum xato');
+                  Navigator.pop(context, false);
+                }
+                return NavigationDecision.prevent;
+              }
+
+              // Tashqi linklarni brauzerga ochish
+              if (request.url.startsWith('http') &&
+                  !request.url.contains('devmyid.uz')) {
+                _launchExternalBrowser(request.url);
+                return NavigationDecision.prevent;
+              }
+
+              return NavigationDecision.navigate;
+            },
+            onPageStarted: (url) {
+              setState(() => _isLoading = true);
+            },
+            onPageFinished: (url) {
+              setState(() => _isLoading = false);
+            },
+            onWebResourceError: (error) {
+              widget.onError(error.description);
+            },
+          ),
+        );
+
+      // Authorization URL ni yuklash
+      await _controller.loadRequest(authUrl);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Xatolik: $e')));
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      widget.onError('WebView sozlashda xato: $e');
     }
   }
 
-  // An'anaviy kirish
-  Future<void> _traditionalLogin() async {
-    // Bu yerda telefon/parol bilan kirish logikasi
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'An\'anaviy kirish hozircha ishlamaydi. MyID dan foydalaning.',
-        ),
-      ),
-    );
+  Future<void> _launchExternalBrowser(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Card(
-                elevation: 8,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Logo
-                      const Text('🌱', style: TextStyle(fontSize: 64)),
-                      const SizedBox(height: 16),
-
-                      // Sarlavha
-                      const Text(
-                        'GreenMarket',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2ecc71),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      const Text(
-                        'Ekologik bozor platformasiga xush kelibsiz',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 32),
-
-                      // MyID tugmasi
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _loginWithMyID,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0066cc),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(28),
-                            ),
-                            elevation: 4,
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Text(
-                                        'ID',
-                                        style: TextStyle(
-                                          color: Color(0xFF0066cc),
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    const Text(
-                                      'MyID orqali kirish',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Divider
-                      Row(
-                        children: [
-                          Expanded(child: Divider(color: Colors.grey[300])),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(
-                              'yoki',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                          Expanded(child: Divider(color: Colors.grey[300])),
-                        ],
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Telefon input
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: 'Telefon raqam',
-                          prefixIcon: const Icon(Icons.phone),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        keyboardType: TextInputType.phone,
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // Parol input
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: 'Parol',
-                          prefixIcon: const Icon(Icons.lock),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        obscureText: true,
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Kirish tugmasi
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: _traditionalLogin,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2ecc71),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: const Text(
-                            'Kirish',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      // Afzalliklar
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[50],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'MyID orqali kirish afzalliklari:',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            _buildBenefit('Tez va xavfsiz autentifikatsiya'),
-                            _buildBenefit(
-                              'Ma\'lumotlar avtomatik to\'ldiriladi',
-                            ),
-                            _buildBenefit('Parol eslab qolish shart emas'),
-                            _buildBenefit('Davlat tomonidan tasdiqlangan'),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+      appBar: AppBar(
+        title: const Text('MyID ga kirish'),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
-    );
-  }
-
-  Widget _buildBenefit(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
+      body: Stack(
         children: [
-          const Icon(Icons.check_circle, color: Color(0xFF2ecc71), size: 20),
-          const SizedBox(width: 8),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
+          WebViewWidget(controller: _controller),
+          if (_isLoading) const Center(child: CircularProgressIndicator()),
         ],
       ),
     );

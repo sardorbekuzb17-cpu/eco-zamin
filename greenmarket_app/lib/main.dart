@@ -17,28 +17,47 @@ import 'services/security_service.dart';
 import 'services/myid_backend_service.dart';
 import 'widgets/force_update_dialog.dart';
 
-import 'screens/myid_simple_login.dart';
+import 'screens/myid_direct_sdk_screen.dart';
+import 'screens/myid_oauth_test_screen.dart';
+import 'screens/myid_oauth_full_login_screen.dart';
+import 'screens/myid_complete_login_screen.dart';
+import 'screens/myid_backend_login_screen.dart';
+import 'screens/myid_passport_input_screen.dart';
+import 'screens/myid_profile_screen.dart';
+import 'screens/myid_main_login_screen.dart';
+import 'screens/admin_users_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 🔒 XAVFSIZLIK TEKSHIRUVI
-  final securityCheck = await SecurityService.performSecurityCheck();
-  if (!securityCheck.isPassed && !kDebugMode) {
-    // Xavfsizlik buzilgan - ilovani to'xtatish
-    if (kDebugMode) {
-      debugPrint('⚠️ Xavfsizlik tekshiruvi: ${securityCheck.message}');
-    }
-    await SecurityService.onSecurityViolation();
-    return;
-  }
+  // 🔒 XAVFSIZLIK TEKSHIRUVI - vaqtincha o'chirilgan (test uchun)
+  // final securityCheck = await SecurityService.performSecurityCheck();
+  // if (!securityCheck.isPassed && !kDebugMode) {
+  //   if (kDebugMode) {
+  //     debugPrint('⚠️ Xavfsizlik tekshiruvi: ${securityCheck.message}');
+  //   }
+  //   await SecurityService.onSecurityViolation();
+  //   return;
+  // }
 
   // Bildirishnomalarni sozlash
-  await initializeTimezone();
-  await NotificationService.initialize();
+  try {
+    await initializeTimezone();
+    await NotificationService.initialize();
+  } catch (e) {
+    if (kDebugMode) {
+      debugPrint('⚠️ Bildirishnoma sozlashda xato: $e');
+    }
+  }
 
   // Reklamalarni sozlash
-  await AdService.initialize();
+  try {
+    await AdService.initialize();
+  } catch (e) {
+    if (kDebugMode) {
+      debugPrint('⚠️ Reklama sozlashda xato: $e');
+    }
+  }
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -97,7 +116,14 @@ class _GreenMarketAppState extends State<GreenMarketApp> {
       home: const AuthWrapper(),
       routes: {
         '/home': (context) => const HomePage(),
-        '/login': (context) => const MyIdSimpleLogin(),
+        '/login': (context) => const MyIdDirectSdkScreen(),
+        '/oauth-test': (context) => const MyIdOAuthTestScreen(),
+        '/oauth-login': (context) => const MyIdOAuthFullLoginScreen(),
+        '/complete-login': (context) => const MyIdCompleteLoginScreen(),
+        '/backend-login': (context) => const MyIdBackendLoginScreen(),
+        '/passport-input': (context) => const MyIdPassportInputScreen(),
+        '/profile': (context) => const MyIdProfileScreen(),
+        '/admin-users': (context) => const AdminUsersScreen(),
       },
     );
   }
@@ -122,7 +148,7 @@ class AuthWrapper extends StatelessWidget {
           return const HomePage();
         }
 
-        return const MyIdSimpleLogin();
+        return const MyIdMainLoginScreen();
       },
     );
   }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import '../services/myid_service.dart';
-import 'myid_login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import '../models/myid_profile_model.dart';
+import 'myid_main_login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,7 +12,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Map<String, dynamic>? _userData;
+  MyIdProfileModel? _profile;
   bool _isLoading = true;
 
   @override
@@ -21,21 +23,33 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadUserData() async {
     try {
-      final userData = await MyIDService.getCurrentUser();
-      setState(() {
-        _userData = userData;
-        _isLoading = false;
-      });
+      final prefs = await SharedPreferences.getInstance();
+      final profileData = prefs.getString('myid_profile');
+
+      if (profileData != null) {
+        final profileJson = json.decode(profileData);
+        setState(() {
+          _profile = MyIdProfileModel.fromJson(profileJson);
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
     } catch (e) {
       setState(() => _isLoading = false);
     }
   }
 
   Future<void> _logout() async {
-    await MyIDService.logout();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('myid_profile');
+    await prefs.remove('myid_access_token');
+    await prefs.remove('myid_session_id');
+    await prefs.remove('user_data');
+
     if (mounted) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const MyIDLoginScreen()),
+        MaterialPageRoute(builder: (context) => const MyIdMainLoginScreen()),
       );
     }
   }
@@ -62,7 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Foydalanuvchi ma'lumotlari
-                  if (_userData != null) ...[
+                  if (_profile != null) ...[
                     Card(
                       elevation: 4,
                       shape: RoundedRectangleBorder(
@@ -76,12 +90,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             Row(
                               children: [
                                 CircleAvatar(
-                                  radius: 30,
+                                  radius: 35,
                                   backgroundColor: const Color(0xFF2ecc71),
                                   child: Text(
-                                    _userData!['firstName']?[0] ?? 'U',
+                                    _profile!.commonData?.firstName?[0]
+                                            .toUpperCase() ??
+                                        'U',
                                     style: const TextStyle(
-                                      fontSize: 24,
+                                      fontSize: 28,
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -94,46 +110,106 @@ class _HomeScreenState extends State<HomeScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        _userData!['fullName'] ??
-                                            'Foydalanuvchi',
+                                        '${_profile!.commonData?.lastName ?? ''} ${_profile!.commonData?.firstName ?? ''}'
+                                            .trim(),
                                         style: const TextStyle(
-                                          fontSize: 18,
+                                          fontSize: 20,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
-                                      Text(
-                                        'JSHSHIR: ${_userData!['pin'] ?? ''}',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey[600],
+                                      if (_profile!.commonData?.pinfl != null)
+                                        Text(
+                                          'JSHSHIR: ${_profile!.commonData!.pinfl}',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.grey[600],
+                                          ),
                                         ),
-                                      ),
+                                      if (_profile!.status != null)
+                                        Container(
+                                          margin: const EdgeInsets.only(top: 4),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: _profile!.code == '0'
+                                                ? Colors.green[100]
+                                                : Colors.orange[100],
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            _profile!.code == '0'
+                                                ? '✓ Tasdiqlangan'
+                                                : '⚠ Tekshirilmoqda',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: _profile!.code == '0'
+                                                  ? Colors.green[900]
+                                                  : Colors.orange[900],
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
                                     ],
                                   ),
                                 ),
                               ],
                             ),
-                            const Divider(height: 32),
-                            _buildInfoRow(
-                              Icons.cake,
-                              'Tug\'ilgan sana',
-                              _userData!['birthDate'] ?? '',
-                            ),
-                            _buildInfoRow(
-                              Icons.phone,
-                              'Telefon',
-                              _userData!['phone'] ?? 'Kiritilmagan',
-                            ),
-                            _buildInfoRow(
-                              Icons.email,
-                              'Email',
-                              _userData!['email'] ?? 'Kiritilmagan',
-                            ),
-                            _buildInfoRow(
-                              Icons.location_on,
-                              'Manzil',
-                              '${_userData!['address']?['region'] ?? ''}, ${_userData!['address']?['district'] ?? ''}',
+                            const Divider(height: 24, thickness: 1),
+                            if (_profile!.commonData?.birthDate != null)
+                              _buildInfoRow(
+                                Icons.cake,
+                                'Tug\'ilgan sana',
+                                _profile!.commonData!.birthDate!,
+                              ),
+                            if (_profile!.commonData?.gender != null)
+                              _buildInfoRow(
+                                Icons.person,
+                                'Jins',
+                                _profile!.commonData!.gender!,
+                              ),
+                            if (_profile!.persData?.phone != null)
+                              _buildInfoRow(
+                                Icons.phone,
+                                'Telefon',
+                                _profile!.persData!.phone!,
+                              ),
+                            if (_profile!.persData?.email != null)
+                              _buildInfoRow(
+                                Icons.email,
+                                'Email',
+                                _profile!.persData!.email!,
+                              ),
+                            if (_profile!
+                                    .persData
+                                    ?.permanentRegistration
+                                    ?.region !=
+                                null)
+                              _buildInfoRow(
+                                Icons.location_on,
+                                'Manzil',
+                                '${_profile!.persData!.permanentRegistration!.region}, ${_profile!.persData!.permanentRegistration!.district ?? ''}',
+                              ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.pushNamed(context, '/profile');
+                                },
+                                icon: const Icon(Icons.person),
+                                label: const Text('To\'liq profil'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF2ecc71),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -157,28 +233,36 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisSpacing: 16,
                     children: [
                       _buildFeatureCard(
-                        icon: Icons.shopping_cart,
-                        title: 'Mahsulotlar',
-                        color: const Color(0xFF2ecc71),
-                        onTap: () {},
+                        icon: Icons.badge,
+                        title: 'Pasport Input',
+                        color: const Color(0xFFe74c3c),
+                        onTap: () {
+                          Navigator.pushNamed(context, '/passport-input');
+                        },
                       ),
                       _buildFeatureCard(
-                        icon: Icons.local_shipping,
-                        title: 'Buyurtmalar',
+                        icon: Icons.cloud,
+                        title: 'Backend Login',
                         color: const Color(0xFF3498db),
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.pushNamed(context, '/backend-login');
+                        },
                       ),
                       _buildFeatureCard(
-                        icon: Icons.eco,
-                        title: 'Bog\'bon AI',
-                        color: const Color(0xFF27ae60),
-                        onTap: () {},
+                        icon: Icons.verified_user,
+                        title: 'To\'liq OAuth',
+                        color: const Color(0xFF2ecc71),
+                        onTap: () {
+                          Navigator.pushNamed(context, '/complete-login');
+                        },
                       ),
                       _buildFeatureCard(
-                        icon: Icons.person,
-                        title: 'Profil',
-                        color: const Color(0xFF9b59b6),
-                        onTap: () {},
+                        icon: Icons.admin_panel_settings,
+                        title: 'Admin Panel',
+                        color: const Color(0xFFf39c12),
+                        onTap: () {
+                          Navigator.pushNamed(context, '/admin-users');
+                        },
                       ),
                     ],
                   ),

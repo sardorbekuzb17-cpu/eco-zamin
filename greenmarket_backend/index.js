@@ -48,7 +48,7 @@ const CLIENT_ID = 'quyosh_24_sdk-OYD9rRoHYRjJkpQ2LQNV0EG6KSXtKruUMkOCdY1v';
 const CLIENT_SECRET = 'JRgNV6Av8DlocKJIAozwUrx4uCOU9mDLy5D9SKsEF6EvG2VlD7FU8nup5AYlU3biDfNwOEB0S54Sgup3CB3aJNJuk2wIkG3AIOlP';
 const USERNAME = 'quyosh_24_sdk'; // API uchun username
 const PASSWORD = 'JRgNV6Av8DlocKJIAozwUrx4uCOU9mDLy5D9SKsEF6EvG2VlD7FU8nup5AYlU3biDfNwOEB0S54Sgup3CB3aJNJuk2wIkG3AIOlP'; // API uchun password
-const MYID_HOST = 'https://api.myid.uz'; // PRODUCTION muhiti
+const MYID_HOST = 'https://api.devmyid.uz'; // DEV muhiti
 
 // Foydalanuvchilar bazasi (xotirada saqlash - test uchun)
 const users = [];
@@ -77,15 +77,14 @@ app.post('/api/myid/create-simple-session-complete', async (req, res, next) => {
         // 1. Access token olish
         const tokenResponse = await retryWithBackoff(async () => {
             return await axios.post(
-                `${MYID_HOST}/api/v1/oauth2/access-token`,
-                new URLSearchParams({
-                    grant_type: 'client_credentials',
+                `${MYID_HOST}/api/v1/auth/clients/access-token`,
+                {
                     client_id: CLIENT_ID,
                     client_secret: CLIENT_SECRET,
-                }),
+                },
                 {
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Content-Type': 'application/json',
                     },
                     timeout: 10000,
                 }
@@ -151,16 +150,14 @@ app.post('/api/myid/get-user-info-with-images', async (req, res, next) => {
         console.log('📤 Access token so\'ralmoqda...');
         const tokenResponse = await retryWithBackoff(async () => {
             return await axios.post(
-                `${MYID_HOST}/api/v1/oauth2/access-token`,
-                new URLSearchParams({
-                    grant_type: 'authorization_code',
-                    code: code,
+                `${MYID_HOST}/api/v1/auth/clients/access-token`,
+                {
                     client_id: CLIENT_ID,
                     client_secret: CLIENT_SECRET,
-                }),
+                },
                 {
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Content-Type': 'application/json',
                     },
                     timeout: 10000,
                 }
@@ -382,15 +379,14 @@ app.post('/api/myid/create-session', async (req, res, next) => {
         // 1. Access token olish (client credentials - OAuth2)
         const tokenResponse = await retryWithBackoff(async () => {
             return await axios.post(
-                `${MYID_HOST}/api/v1/oauth2/access-token`,
-                new URLSearchParams({
-                    grant_type: 'client_credentials',
+                `${MYID_HOST}/api/v1/auth/clients/access-token`,
+                {
                     client_id: CLIENT_ID,
                     client_secret: CLIENT_SECRET,
-                }),
+                },
                 {
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Content-Type': 'application/json',
                     },
                     timeout: 10000,
                 }

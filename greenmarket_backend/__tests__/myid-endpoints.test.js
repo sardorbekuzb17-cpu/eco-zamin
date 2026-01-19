@@ -208,10 +208,10 @@ describe('MyID Backend Endpoints', () => {
     // 8. FOYDALANUVCHI MA'LUMOTLARINI OLISH (GET)
     // ============================================
     describe('Get User Data By Code', () => {
-        test('GET /api/myid/data/code=:code - Code orqali ma\'lumot olish', async () => {
+        test('GET /api/myid/data?code=:code - Code orqali ma\'lumot olish', async () => {
             try {
                 const response = await axios.get(
-                    `${BASE_URL}/api/myid/data/code=${TEST_CODE}`
+                    `${BASE_URL}/api/myid/data?code=${TEST_CODE}`
                 );
 
                 console.log('✅ Get User Data By Code:');

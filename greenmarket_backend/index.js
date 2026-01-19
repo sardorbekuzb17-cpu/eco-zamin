@@ -116,7 +116,7 @@ app.post('/api/myid/create-session', async (req, res, next) => {
         );
 
         const accessToken = tokenResponse.data.access_token;
-        console.log('✅ [1/2] Access token olindi');
+        console.log('✅ [1/2] Access token olindi:', accessToken.substring(0, 50) + '...');
 
         console.log('📤 [2/2] Session yaratilmoqda...');
 
@@ -132,7 +132,7 @@ app.post('/api/myid/create-session', async (req, res, next) => {
             }
         );
 
-        console.log('✅ [2/2] Session yaratildi:', sessionResponse.data.session_id);
+        console.log('✅ [2/2] Session yaratildi:', sessionResponse.data);
 
         res.json({
             success: true,
@@ -142,7 +142,10 @@ app.post('/api/myid/create-session', async (req, res, next) => {
             },
         });
     } catch (error) {
-        console.error('❌ Session yaratishda xato:', error.response?.data || error.message);
+        console.error('❌ Session yaratishda xato:');
+        console.error('   Status:', error.response?.status);
+        console.error('   Data:', error.response?.data);
+        console.error('   Message:', error.message);
         next(error);
     }
 });

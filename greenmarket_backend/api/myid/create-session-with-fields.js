@@ -6,6 +6,8 @@ const MYID_HOST = 'https://api.devmyid.uz';
 
 module.exports = async (req, res) => {
     try {
+        const { phone_number, birth_date, is_resident, pass_data, threshold } = req.body;
+
         console.log('📤 [1/2] Access token olinmoqda...');
 
         const tokenResponse = await axios.post(
@@ -26,11 +28,18 @@ module.exports = async (req, res) => {
         const accessToken = tokenResponse.data.access_token;
         console.log('✅ [1/2] Access token olindi');
 
-        console.log('📤 [2/2] Session yaratilmoqda...');
+        console.log('📤 [2/2] Session yaratilmoqda (pasport maydonlari bilan)...');
+
+        const sessionBody = {};
+        if (phone_number) sessionBody.phone_number = phone_number;
+        if (birth_date) sessionBody.birth_date = birth_date;
+        if (is_resident !== undefined) sessionBody.is_resident = is_resident;
+        if (pass_data) sessionBody.pass_data = pass_data;
+        if (threshold !== undefined) sessionBody.threshold = threshold;
 
         const sessionResponse = await axios.post(
             `${MYID_HOST}/api/v2/sdk/sessions`,
-            {},
+            sessionBody,
             {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,

@@ -6,6 +6,15 @@ const MYID_HOST = 'https://api.devmyid.uz';
 
 module.exports = async (req, res) => {
     try {
+        const { code } = req.query;
+
+        if (!code) {
+            return res.status(400).json({
+                success: false,
+                error: 'code majburiy',
+            });
+        }
+
         console.log('📤 [1/2] Access token olinmoqda...');
 
         const tokenResponse = await axios.post(
@@ -26,31 +35,27 @@ module.exports = async (req, res) => {
         const accessToken = tokenResponse.data.access_token;
         console.log('✅ [1/2] Access token olindi');
 
-        console.log('📤 [2/2] Session yaratilmoqda...');
+        console.log('📤 [2/2] Profil ma\'lumotlari olinmoqda...');
 
-        const sessionResponse = await axios.post(
-            `${MYID_HOST}/api/v2/sdk/sessions`,
-            {},
+        const userResponse = await axios.get(
+            `${MYID_HOST}/api/v1/users/me`,
             {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json',
                 },
                 timeout: 10000,
             }
         );
 
-        console.log('✅ [2/2] Session yaratildi:', sessionResponse.data.session_id);
+        const userData = userResponse.data;
+        console.log('✅ [2/2] Profil ma\'lumotlari olindi');
 
         res.status(200).json({
             success: true,
-            data: {
-                session_id: sessionResponse.data.session_id,
-                expires_in: sessionResponse.data.expires_in,
-            },
+            data: userData,
         });
     } catch (error) {
-        console.error('❌ Session yaratishda xato:', error.response?.data || error.message);
+        console.error('❌ Profil olishda xato:', error.response?.data || error.message);
         res.status(error.response?.status || 500).json({
             success: false,
             error: error.response?.data || error.message,

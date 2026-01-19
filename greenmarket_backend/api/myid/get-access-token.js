@@ -45,7 +45,7 @@ module.exports = async (req, res) => {
         });
     } catch (error) {
         console.error('❌ Access token olishda xato:', error.response?.data || error.message);
-        res.status(401).json({
+        res.status(error.response?.status || 500).json({
             success: false,
             error: error.response?.data || error.message,
         });

@@ -6,6 +6,15 @@ const BASE_URL = 'https://greenmarket-backend-lilac.vercel.app';
 const TEST_CODE = 'TEST_CODE_12345';
 const TEST_BASE64 = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8VAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAA8A/9k=';
 
+console.log(`
+╔════════════════════════════════════════════════════════════╗
+║          MyID Backend Endpoints Test Suite                 ║
+║          URL: ${BASE_URL}
+╠════════════════════════════════════════════════════════════╣
+║ Testing all endpoints...                                   ║
+╚════════════════════════════════════════════════════════════╝
+`);
+
 describe('MyID Backend Endpoints', () => {
 
     // ============================================

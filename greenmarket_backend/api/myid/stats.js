@@ -1,9 +1,18 @@
 const mongoose = require('mongoose');
 
-// MyID User Model
 const MyIdUserSchema = new mongoose.Schema({
     pinfl: { type: String, required: true, unique: true, index: true },
+    myid_code: { type: String, required: true },
+    profile: mongoose.Schema.Types.Mixed,
+    face_image: String,
+    passport_image: String,
+    comparison_value: Number,
+    auth_method: { type: String, enum: ['sdk_direct', 'simple_authorization', 'empty_session', 'passport_session'], default: 'sdk_direct' },
+    status: { type: String, enum: ['active', 'inactive', 'blocked'], default: 'active' },
     registered_at: { type: Date, default: Date.now, index: true },
+    last_login: { type: Date, default: Date.now },
+    device_info: mongoose.Schema.Types.Mixed,
+    metadata: mongoose.Schema.Types.Mixed,
     deleted_at: Date,
 });
 

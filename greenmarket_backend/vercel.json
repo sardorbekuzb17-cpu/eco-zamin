@@ -12,8 +12,71 @@
     ],
     "routes": [
         {
-            "src": "/api/(.*)",
-            "dest": "/api/$1.js"
+            "src": "/api/health",
+            "dest": "/api/health.js"
+        },
+        {
+            "src": "/api/myid/get-access-token",
+            "dest": "/api/myid/get-access-token.js",
+            "methods": [
+                "POST"
+            ]
+        },
+        {
+            "src": "/api/myid/create-session",
+            "dest": "/api/myid/create-session.js",
+            "methods": [
+                "POST"
+            ]
+        },
+        {
+            "src": "/api/myid/create-session-with-passport",
+            "dest": "/api/myid/create-session-with-passport.js",
+            "methods": [
+                "POST"
+            ]
+        },
+        {
+            "src": "/api/myid/create-session-with-fields",
+            "dest": "/api/myid/create-session-with-fields.js",
+            "methods": [
+                "POST"
+            ]
+        },
+        {
+            "src": "/api/myid/get-user-info",
+            "dest": "/api/myid/get-user-info.js",
+            "methods": [
+                "POST"
+            ]
+        },
+        {
+            "src": "/api/myid/get-user-info-with-images",
+            "dest": "/api/myid/get-user-info-with-images.js",
+            "methods": [
+                "POST"
+            ]
+        },
+        {
+            "src": "/api/myid/data/code=(.+)",
+            "dest": "/api/myid/get-user-data-by-code.js?code=$1",
+            "methods": [
+                "GET"
+            ]
+        },
+        {
+            "src": "/api/myid/users",
+            "dest": "/api/myid/users.js",
+            "methods": [
+                "GET"
+            ]
+        },
+        {
+            "src": "/api/myid/stats",
+            "dest": "/api/myid/stats.js",
+            "methods": [
+                "GET"
+            ]
         },
         {
             "src": "/(.*)",

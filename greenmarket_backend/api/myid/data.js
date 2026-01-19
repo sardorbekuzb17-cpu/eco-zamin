@@ -1,8 +1,12 @@
 const axios = require('axios');
 
-const CLIENT_ID = process.env.MYID_CLIENT_ID || 'quyosh_24_sdk-OYD9rRoHYRjJkpQ2LQNV0EG6KSXtKruUMkOCdY1v';
-const CLIENT_SECRET = process.env.MYID_CLIENT_SECRET || 'JRgNV6Av8DlocKJIAozwUrx4uCOU9mDLy5D9SKsEF6EvG2VlD7FU8nup5AYlU3biDfNwOEB0S54Sgup3CB3aJNJuk2wIkG3AIOlP';
+const CLIENT_ID = process.env.MYID_CLIENT_ID;
+const CLIENT_SECRET = process.env.MYID_CLIENT_SECRET;
 const MYID_HOST = process.env.MYID_HOST || 'https://api.devmyid.uz';
+
+if (!CLIENT_ID || !CLIENT_SECRET) {
+    console.error('❌ MYID_CLIENT_ID yoki MYID_CLIENT_SECRET qo\'shilmagan!');
+}
 
 module.exports = async (req, res) => {
     try {

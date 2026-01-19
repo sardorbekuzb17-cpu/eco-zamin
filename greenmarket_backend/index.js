@@ -93,6 +93,18 @@ app.post('/api/myid/create-simple-session-complete', async (req, res, next) => {
         });
 
         const accessToken = tokenResponse.data.access_token;
+        const expiresIn = tokenResponse.data.expires_in;
+        const tokenType = tokenResponse.data.token_type;
+
+        if (!accessToken || !expiresIn || !tokenType) {
+            throw new Error('Access token javobida majburiy maydonlar yo\'q');
+        }
+
+        console.log('✅ Access token olindi:', {
+            token_length: accessToken.length,
+            expires_in: expiresIn,
+            token_type: tokenType,
+        });
         console.log('✅ [1/2] Access token olindi');
 
         // 2. Simple session yaratish
@@ -166,9 +178,19 @@ app.post('/api/myid/get-user-info-with-images', async (req, res, next) => {
             );
         });
 
-        console.log('✅ Access token olindi');
-
         const accessToken = tokenResponse.data.access_token;
+        const expiresIn = tokenResponse.data.expires_in;
+        const tokenType = tokenResponse.data.token_type;
+
+        if (!accessToken || !expiresIn || !tokenType) {
+            throw new Error('Access token javobida majburiy maydonlar yo\'q');
+        }
+
+        console.log('✅ Access token olindi:', {
+            token_length: accessToken.length,
+            expires_in: expiresIn,
+            token_type: tokenType,
+        });
 
         // 2. Foydalanuvchi ma'lumotlarini olish (qayta urinish mexanizmi bilan)
         console.log('📤 Foydalanuvchi ma\'lumotlari so\'ralmoqda...');
@@ -397,7 +419,18 @@ app.post('/api/myid/create-session', async (req, res, next) => {
         });
 
         const accessToken = tokenResponse.data.access_token;
-        console.log('✅ Access token olindi');
+        const expiresIn = tokenResponse.data.expires_in;
+        const tokenType = tokenResponse.data.token_type;
+
+        if (!accessToken || !expiresIn || !tokenType) {
+            throw new Error('Access token javobida majburiy maydonlar yo\'q');
+        }
+
+        console.log('✅ Access token olindi:', {
+            token_length: accessToken.length,
+            expires_in: expiresIn,
+            token_type: tokenType,
+        });
 
         // 2. Bo'sh sessiya yaratish (YANGI API v2) (qayta urinish mexanizmi bilan)
         const sessionResponse = await retryWithBackoff(async () => {

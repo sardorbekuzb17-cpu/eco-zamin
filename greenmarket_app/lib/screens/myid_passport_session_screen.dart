@@ -382,7 +382,7 @@ class _MyIdPassportSessionScreenState extends State<MyIdPassportSessionScreen> {
                   onChanged: (value) {
                     setState(() => _isResident = value);
                   },
-                  activeColor: const Color(0xFF0066cc),
+                  activeThumbColor: const Color(0xFF0066cc),
                 ),
               ],
             ),

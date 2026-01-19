@@ -33,6 +33,7 @@ import 'screens/myid_simple_flow_screen.dart';
 import 'screens/myid_sdk_flow_screen.dart';
 import 'screens/myid_simple_auth_screen.dart';
 import 'screens/myid_empty_session_screen.dart';
+import 'screens/myid_empty_session_simple_screen.dart';
 import 'screens/myid_sdk_direct_screen.dart';
 import 'screens/myid_complete_flow_screen.dart';
 import 'screens/myid_passport_session_screen.dart';
@@ -154,6 +155,8 @@ class _GreenMarketAppState extends State<GreenMarketApp> {
         '/sdk-flow': (context) => const MyIdSimpleFlowScreen(),
         '/simple-auth': (context) => const MyIdSimpleAuthScreen(),
         '/empty-session': (context) => const MyIdEmptySessionScreen(),
+        '/empty-session-simple': (context) =>
+            const MyIdEmptySessionSimpleScreen(),
         '/sdk-direct': (context) => const MyIdSdkDirectScreen(),
         '/passport-session': (context) => const MyIdPassportSessionScreen(),
         '/complete-flow': (context) => const MyIdCompleteFlowScreen(),

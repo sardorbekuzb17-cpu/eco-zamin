@@ -1,18 +1,21 @@
 # MyID DEV Muhiti - 103 Xatolik
 
 ## Muammo
+
 Biz DEV muhiti uchun credentials oldik va `MyIdEnvironment.DEBUG` ga o'zgartirdik, lekin hali ham **103 xatolik** (Session expired) chiqmoqda.
 
 ## Bizning Sozlamalar
 
 ### Credentials (DEV uchun tasdiqlangan)
-```
+
+```env
 client_id: quyosh_24_sdk-OYD9rRoHYRjJkpQ2LQNV0EG6KSXtKruUMkOCdY1v
 client_secret: JRgNV6Av8DlocKJIAozwUrx4uCOU9mDLy5D9SKsEF6EvG2VlD7FU8nup5AYlU3biDfNwOEB0S54Sgup3CB3aJNJuk2wIkG3AIOlP
 client_hash_id: ac6d0f4a-5d5b-44e3-a865-9159a3146a8c
 ```
 
 ### SDK Konfiguratsiyasi
+
 ```dart
 final config = MyIdConfig(
   sessionId: sessionId,
@@ -32,6 +35,7 @@ final config = MyIdConfig(
 
 2. ❓ **DEV credentials bilan session qanday yaratiladi?**
    - Biz quyidagi request yubormoqdamiz:
+
    ```bash
    POST https://api.myid.uz/api/v1/oauth2/session
    Headers:
@@ -42,6 +46,7 @@ final config = MyIdConfig(
        "scope": "address,contacts,doc_data,common_data,doc_files"
      }
    ```
+
    - Bu to'g'rimi DEV uchun?
    - Qo'shimcha parametrlar kerakmi?
 
@@ -56,10 +61,12 @@ final config = MyIdConfig(
    - DEV credentials to'g'ri faollashtirilganmi?
 
 ## Xatolik Detallari
+
 - **Error Code**: 103
 - **Error Message**: Session expired
 - **Environment**: MyIdEnvironment.DEBUG
 - **SDK Version**: 3.1.41
 
 ## Iltimos Yordam Bering
+
 DEV muhitida qanday qilib to'g'ri ishlashini ko'rsating.

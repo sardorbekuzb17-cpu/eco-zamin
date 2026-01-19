@@ -1,16 +1,43 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
+const mongoose = require('mongoose');
+require('dotenv').config();
 const myidSdkFlow = require('./myid_sdk_flow');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 const { retryWithBackoff } = require('./myid_sdk_flow');
 const { encryptSensitiveData, decryptSensitiveData, sanitizeApiResponse } = require('./security/encryption');
 const { apiLimiter } = require('./middleware/rateLimiter');
+
+// MyID User Model
+const MyIdUserSchema = new mongoose.Schema({
+    pinfl: { type: String, required: true, unique: true, index: true },
+    myid_code: { type: String, required: true },
+    profile: mongoose.Schema.Types.Mixed,
+    face_image: String,
+    passport_image: String,
+    comparison_value: Number,
+    auth_method: { type: String, enum: ['sdk_direct', 'simple_authorization', 'empty_session'], default: 'sdk_direct' },
+    status: { type: String, enum: ['active', 'inactive', 'blocked'], default: 'active' },
+    registered_at: { type: Date, default: Date.now, index: true },
+    last_login: { type: Date, default: Date.now },
+    device_info: mongoose.Schema.Types.Mixed,
+    metadata: mongoose.Schema.Types.Mixed,
+    deleted_at: Date,
+});
+
+const MyIdUser = mongoose.model('MyIdUser', MyIdUserSchema);
+
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // x-www-form-urlencoded uchun
 app.use(cors());
+
+// MongoDB ulanish
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/greenmarket')
+    .then(() => console.log('✅ MongoDB ga ulandi'))
+    .catch(err => console.error('❌ MongoDB xatosi:', err));
 
 // Rate limiting - barcha API endpointlariga qo'llash
 // 1 daqiqada maksimal 10 so'rov (Requirements: 5.8)
@@ -163,14 +190,46 @@ app.post('/api/myid/get-user-info-with-images', async (req, res, next) => {
         // 3. Foydalanuvchini saqlash (rasmlar bilan)
         const userData = userInfoResponse.data;
 
-        // Maxfiy ma'lumotlarni shifrlash
-        const encryptedProfileData = encryptSensitiveData(userData);
+        // PINFL ni olish (profil ma'lumotlaridan)
+        const pinfl = userData.pinfl || code;
 
+        // Mavjud foydalanuvchini tekshirish
+        let existingUser = await MyIdUser.findOne({ pinfl: pinfl });
+
+        if (existingUser) {
+            // Mavjud foydalanuvchini yangilash
+            console.log('📝 Mavjud foydalanuvchi yangilanmoqda:', pinfl);
+            existingUser.last_login = new Date();
+            existingUser.profile = userData;
+            existingUser.face_image = base64_image;
+            await existingUser.save();
+            console.log('✅ Foydalanuvchi yangilandi');
+        } else {
+            // Yangi foydalanuvchi yaratish
+            console.log('🆕 Yangi foydalanuvchi yaratilmoqda:', pinfl);
+            const newUser = new MyIdUser({
+                pinfl: pinfl,
+                myid_code: code,
+                profile: userData,
+                face_image: base64_image,
+                auth_method: 'simple_authorization',
+                status: 'active',
+                registered_at: new Date(),
+                last_login: new Date(),
+            });
+
+            await newUser.save();
+            existingUser = newUser;
+            console.log('✅ Yangi foydalanuvchi saqlandi:', newUser._id);
+        }
+
+        // Xotirada ham saqlash (test uchun)
         const newUser = {
             id: users.length + 1,
             myid_code: code,
-            profile_data: encryptedProfileData,
-            base64_image: base64_image, // SDK'dan kelgan rasm (base64)
+            pinfl: pinfl,
+            profile_data: userData,
+            base64_image: base64_image,
             registered_at: new Date().toISOString(),
             last_login: new Date().toISOString(),
             status: 'active',
@@ -184,7 +243,8 @@ app.post('/api/myid/get-user-info-with-images', async (req, res, next) => {
         stats.todayRegistrations++;
         stats.lastRegistrationDate = new Date().toISOString();
 
-        console.log('✅ Foydalanuvchi saqlandi:', newUser.id);
+        console.log('✅ Foydalanuvchi saqlandi (xotirada):', newUser.id);
+        console.log('   - MongoDB ID:', existingUser._id);
         console.log('   - Rasm saqlandi:', base64_image ? 'ha' : 'yo\'q');
 
         // API javobini tozalash (client_secret'ni olib tashlash)
@@ -192,11 +252,12 @@ app.post('/api/myid/get-user-info-with-images', async (req, res, next) => {
             success: true,
             message: 'Foydalanuvchi muvaffaqiyatli ro\'yxatdan o\'tdi',
             user: {
-                id: newUser.id,
-                myid_code: newUser.myid_code,
-                registered_at: newUser.registered_at,
-                status: newUser.status,
-                auth_method: newUser.auth_method,
+                id: existingUser._id,
+                pinfl: existingUser.pinfl,
+                myid_code: existingUser.myid_code,
+                registered_at: existingUser.registered_at,
+                status: existingUser.status,
+                auth_method: existingUser.auth_method,
             },
             profile: userData,
         });
@@ -1068,6 +1129,115 @@ app.get('/', (req, res) => {
             delete_user: 'DELETE /api/users/:id',
         },
     });
+});
+
+// ============================================
+// ADMIN ENDPOINT'LAR
+// ============================================
+
+// Barcha ro'yxatdan o'tgan foydalanuvchilarni ko'rish
+app.get('/api/myid/users', async (req, res) => {
+    try {
+        console.log('📊 Barcha foydalanuvchilar so\'ralmoqda...');
+
+        const users = await MyIdUser.find({ deleted_at: null })
+            .select('-face_image -passport_image') // Rasmlarni qaytarmaylik
+            .sort({ registered_at: -1 });
+
+        const totalCount = users.length;
+        const todayCount = users.filter(u => {
+            const today = new Date();
+            const userDate = new Date(u.registered_at);
+            return userDate.toDateString() === today.toDateString();
+        }).length;
+
+        console.log(`✅ ${totalCount} ta foydalanuvchi topildi (bugun: ${todayCount})`);
+
+        res.json({
+            success: true,
+            data: {
+                total: totalCount,
+                today: todayCount,
+                users: users,
+            },
+        });
+    } catch (error) {
+        console.error('❌ Foydalanuvchilarni olishda xato:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
+// Bitta foydalanuvchini ko'rish
+app.get('/api/myid/users/:pinfl', async (req, res) => {
+    try {
+        const { pinfl } = req.params;
+
+        console.log('📊 Foydalanuvchi so\'ralmoqda:', pinfl);
+
+        const user = await MyIdUser.findOne({ pinfl: pinfl, deleted_at: null });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: 'Foydalanuvchi topilmadi',
+            });
+        }
+
+        console.log('✅ Foydalanuvchi topildi:', user._id);
+
+        res.json({
+            success: true,
+            data: user,
+        });
+    } catch (error) {
+        console.error('❌ Foydalanuvchini olishda xato:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
+// Statistika
+app.get('/api/myid/stats', async (req, res) => {
+    try {
+        console.log('📊 Statistika so\'ralmoqda...');
+
+        const totalUsers = await MyIdUser.countDocuments({ deleted_at: null });
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayUsers = await MyIdUser.countDocuments({
+            registered_at: { $gte: today },
+            deleted_at: null,
+        });
+
+        const authMethods = await MyIdUser.aggregate([
+            { $match: { deleted_at: null } },
+            { $group: { _id: '$auth_method', count: { $sum: 1 } } },
+        ]);
+
+        console.log('✅ Statistika:', { totalUsers, todayUsers });
+
+        res.json({
+            success: true,
+            data: {
+                total_users: totalUsers,
+                today_registrations: todayUsers,
+                auth_methods: authMethods,
+                last_updated: new Date(),
+            },
+        });
+    } catch (error) {
+        console.error('❌ Statistikani olishda xato:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+        });
+    }
 });
 
 const PORT = process.env.PORT || 3000;

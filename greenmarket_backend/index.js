@@ -119,6 +119,8 @@ app.post('/api/myid/create-session', async (req, res, next) => {
         console.log('✅ [1/2] Access token olindi:', accessToken.substring(0, 50) + '...');
 
         console.log('📤 [2/2] Session yaratilmoqda...');
+        console.log('   URL:', `${MYID_HOST}/api/v2/sdk/sessions`);
+        console.log('   Token:', accessToken.substring(0, 50) + '...');
 
         const sessionResponse = await axios.post(
             `${MYID_HOST}/api/v2/sdk/sessions`,
@@ -128,7 +130,7 @@ app.post('/api/myid/create-session', async (req, res, next) => {
                     'Authorization': `Bearer ${accessToken}`,
                     'Content-Type': 'application/json',
                 },
-                timeout: 10000,
+                timeout: 15000,
             }
         );
 

@@ -79,6 +79,7 @@ app.post('/api/myid/create-simple-session-complete', async (req, res, next) => {
             return await axios.post(
                 `${MYID_HOST}/api/v1/auth/clients/access-token`,
                 {
+                    grant_type: 'client_credentials',
                     client_id: CLIENT_ID,
                     client_secret: CLIENT_SECRET,
                 },
@@ -152,6 +153,7 @@ app.post('/api/myid/get-user-info-with-images', async (req, res, next) => {
             return await axios.post(
                 `${MYID_HOST}/api/v1/auth/clients/access-token`,
                 {
+                    grant_type: 'client_credentials',
                     client_id: CLIENT_ID,
                     client_secret: CLIENT_SECRET,
                 },
@@ -381,6 +383,7 @@ app.post('/api/myid/create-session', async (req, res, next) => {
             return await axios.post(
                 `${MYID_HOST}/api/v1/auth/clients/access-token`,
                 {
+                    grant_type: 'client_credentials',
                     client_id: CLIENT_ID,
                     client_secret: CLIENT_SECRET,
                 },

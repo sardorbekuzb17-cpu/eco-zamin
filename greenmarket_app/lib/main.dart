@@ -35,6 +35,7 @@ import 'screens/myid_simple_auth_screen.dart';
 import 'screens/myid_empty_session_screen.dart';
 import 'screens/myid_sdk_direct_screen.dart';
 import 'screens/myid_complete_flow_screen.dart';
+import 'screens/myid_passport_session_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -154,6 +155,7 @@ class _GreenMarketAppState extends State<GreenMarketApp> {
         '/simple-auth': (context) => const MyIdSimpleAuthScreen(),
         '/empty-session': (context) => const MyIdEmptySessionScreen(),
         '/sdk-direct': (context) => const MyIdSdkDirectScreen(),
+        '/passport-session': (context) => const MyIdPassportSessionScreen(),
         '/complete-flow': (context) => const MyIdCompleteFlowScreen(),
         '/oauth-test': (context) => const MyIdOAuthTestScreen(),
         '/oauth-login': (context) => const MyIdOAuthFullLoginScreen(),

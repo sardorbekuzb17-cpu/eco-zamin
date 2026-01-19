@@ -4,6 +4,7 @@ import 'package:myid/myid.dart';
 import 'package:myid/myid_config.dart';
 import 'package:myid/enums.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../config/myid_config.dart' as app_config;
 
@@ -33,8 +34,9 @@ class _MyIdSdkDirectScreenState extends State<MyIdSdkDirectScreen> {
 
     try {
       if (kDebugMode) {
-        debugPrint('🔵 SDK to\'g\'ridan-to\'g\'ri ishga tushirilmoqda...');
-        debugPrint('   sessionId: null (SDK o\'zi yaratadi)');
+        debugPrint(
+          '🔵 [1/3] SDK to\'g\'ridan-to\'g\'ri ishga tushirilmoqda...',
+        );
       }
 
       // SDK'ni sessionId siz ishga tushirish
@@ -52,7 +54,7 @@ class _MyIdSdkDirectScreenState extends State<MyIdSdkDirectScreen> {
       );
 
       if (kDebugMode) {
-        debugPrint('✅ SDK natija:');
+        debugPrint('✅ [1/3] SDK natija:');
         debugPrint('   - code: ${result.code}');
         debugPrint('   - base64: ${result.base64?.length ?? 0} bytes');
       }
@@ -61,13 +63,48 @@ class _MyIdSdkDirectScreenState extends State<MyIdSdkDirectScreen> {
         throw Exception('SDK code null yoki bo\'sh');
       }
 
+      // Backend'ga profil ma'lumotlarini yuborish
+      setState(() {
+        _statusMessage = 'Backend\'ga ma\'lumotlar yuborilmoqda...';
+      });
+
+      if (kDebugMode) {
+        debugPrint('🔵 [2/3] Backend\'ga so\'rov yuborilmoqda...');
+      }
+
+      final response = await http.post(
+        Uri.parse(
+          'https://greenmarket-backend-lilac.vercel.app/api/myid/get-user-info',
+        ),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'code': result.code, 'base64_image': result.base64}),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Backend xatosi: ${response.body}');
+      }
+
+      final backendData = json.decode(response.body);
+
+      if (kDebugMode) {
+        debugPrint('✅ [2/3] Backend javob olindi');
+        debugPrint('   - User ID: ${backendData['data']['user_id']}');
+        debugPrint('   - PINFL: ${backendData['data']['pinfl']}');
+      }
+
       // Ma'lumotlarni saqlash
       setState(() {
         _statusMessage = 'Ma\'lumotlar saqlanmoqda...';
       });
 
+      if (kDebugMode) {
+        debugPrint('🔵 [3/3] Ma\'lumotlar saqlanmoqda...');
+      }
+
       final userData = {
         'pinfl': result.code,
+        'user_id': backendData['data']['user_id'],
+        'profile': backendData['data']['profile'],
         'verified': true,
         'timestamp': DateTime.now().toIso8601String(),
         'auth_method': 'sdk_direct',
@@ -77,7 +114,7 @@ class _MyIdSdkDirectScreenState extends State<MyIdSdkDirectScreen> {
       await prefs.setString('user_data', json.encode(userData));
 
       if (kDebugMode) {
-        debugPrint('✅ Muvaffaqiyatli yakunlandi!');
+        debugPrint('✅ [3/3] Muvaffaqiyatli yakunlandi!');
       }
 
       setState(() {

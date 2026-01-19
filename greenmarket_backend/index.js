@@ -6,7 +6,6 @@ require('dotenv').config();
 
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 const { apiLimiter } = require('./middleware/rateLimiter');
-const { encryptSensitiveData, sanitizeApiResponse } = require('./security/encryption');
 
 // MyID User Model
 const MyIdUserSchema = new mongoose.Schema({
@@ -16,7 +15,7 @@ const MyIdUserSchema = new mongoose.Schema({
     face_image: String,
     passport_image: String,
     comparison_value: Number,
-    auth_method: { type: String, enum: ['sdk_direct', 'simple_authorization', 'empty_session'], default: 'sdk_direct' },
+    auth_method: { type: String, enum: ['sdk_direct', 'simple_authorization', 'empty_session', 'passport_session'], default: 'sdk_direct' },
     status: { type: String, enum: ['active', 'inactive', 'blocked'], default: 'active' },
     registered_at: { type: Date, default: Date.now, index: true },
     last_login: { type: Date, default: Date.now },
@@ -101,7 +100,6 @@ app.post('/api/myid/create-session', async (req, res, next) => {
     try {
         console.log('📤 [1/2] Access token olinmoqda...');
 
-        // Access token olish
         const tokenResponse = await axios.post(
             `${MYID_HOST}/api/v1/auth/clients/access-token`,
             {
@@ -120,7 +118,6 @@ app.post('/api/myid/create-session', async (req, res, next) => {
         const accessToken = tokenResponse.data.access_token;
         console.log('✅ [1/2] Access token olindi');
 
-        // Session yaratish
         console.log('📤 [2/2] Session yaratilmoqda...');
 
         const sessionResponse = await axios.post(
@@ -139,7 +136,138 @@ app.post('/api/myid/create-session', async (req, res, next) => {
 
         res.json({
             success: true,
-            data: sessionResponse.data,
+            data: {
+                session_id: sessionResponse.data.session_id,
+                expires_in: sessionResponse.data.expires_in,
+            },
+        });
+    } catch (error) {
+        console.error('❌ Session yaratishda xato:', error.response?.data || error.message);
+        next(error);
+    }
+});
+
+// ============================================
+// 2B. SESSION YARATISH (PASPORT BILAN)
+// ============================================
+app.post('/api/myid/create-session-with-passport', async (req, res, next) => {
+    try {
+        const { pass_data, birth_date } = req.body;
+
+        if (!pass_data || !birth_date) {
+            const error = new Error('pass_data va birth_date majburiy');
+            error.statusCode = 400;
+            return next(error);
+        }
+
+        console.log('📤 [1/2] Access token olinmoqda...');
+
+        const tokenResponse = await axios.post(
+            `${MYID_HOST}/api/v1/auth/clients/access-token`,
+            {
+                grant_type: 'client_credentials',
+                client_id: CLIENT_ID,
+                client_secret: CLIENT_SECRET,
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                timeout: 10000,
+            }
+        );
+
+        const accessToken = tokenResponse.data.access_token;
+        console.log('✅ [1/2] Access token olindi');
+
+        console.log('📤 [2/2] Session yaratilmoqda (pasport bilan)...');
+
+        const sessionResponse = await axios.post(
+            `${MYID_HOST}/api/v2/sdk/sessions`,
+            {
+                pass_data,
+                birth_date,
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+                timeout: 10000,
+            }
+        );
+
+        console.log('✅ [2/2] Session yaratildi:', sessionResponse.data.session_id);
+
+        res.json({
+            success: true,
+            data: {
+                session_id: sessionResponse.data.session_id,
+                expires_in: sessionResponse.data.expires_in,
+            },
+        });
+    } catch (error) {
+        console.error('❌ Session yaratishda xato:', error.response?.data || error.message);
+        next(error);
+    }
+});
+
+// ============================================
+// 2C. SESSION YARATISH (PASPORT MAYDONLARI BILAN)
+// ============================================
+app.post('/api/myid/create-session-with-fields', async (req, res, next) => {
+    try {
+        const { phone_number, birth_date, is_resident, pass_data, threshold } = req.body;
+
+        console.log('📤 [1/2] Access token olinmoqda...');
+
+        const tokenResponse = await axios.post(
+            `${MYID_HOST}/api/v1/auth/clients/access-token`,
+            {
+                grant_type: 'client_credentials',
+                client_id: CLIENT_ID,
+                client_secret: CLIENT_SECRET,
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                timeout: 10000,
+            }
+        );
+
+        const accessToken = tokenResponse.data.access_token;
+        console.log('✅ [1/2] Access token olindi');
+
+        console.log('📤 [2/2] Session yaratilmoqda (pasport maydonlari bilan)...');
+
+        const sessionBody = {};
+        if (phone_number) sessionBody.phone_number = phone_number;
+        if (birth_date) sessionBody.birth_date = birth_date;
+        if (is_resident !== undefined) sessionBody.is_resident = is_resident;
+        if (pass_data) sessionBody.pass_data = pass_data;
+        if (threshold !== undefined) sessionBody.threshold = threshold;
+
+        const sessionResponse = await axios.post(
+            `${MYID_HOST}/api/v2/sdk/sessions`,
+            sessionBody,
+            {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+                timeout: 10000,
+            }
+        );
+
+        console.log('✅ [2/2] Session yaratildi:', sessionResponse.data.session_id);
+
+        res.json({
+            success: true,
+            data: {
+                session_id: sessionResponse.data.session_id,
+                expires_in: sessionResponse.data.expires_in,
+            },
         });
     } catch (error) {
         console.error('❌ Session yaratishda xato:', error.response?.data || error.message);
@@ -162,7 +290,6 @@ app.post('/api/myid/get-user-info', async (req, res, next) => {
 
         console.log('📤 [1/3] Access token olinmoqda...');
 
-        // Access token olish
         const tokenResponse = await axios.post(
             `${MYID_HOST}/api/v1/auth/clients/access-token`,
             {
@@ -181,7 +308,6 @@ app.post('/api/myid/get-user-info', async (req, res, next) => {
         const accessToken = tokenResponse.data.access_token;
         console.log('✅ [1/3] Access token olindi');
 
-        // Profil ma'lumotlarini olish
         console.log('📤 [2/3] Profil ma\'lumotlari olinmoqda...');
 
         const userResponse = await axios.get(
@@ -197,7 +323,6 @@ app.post('/api/myid/get-user-info', async (req, res, next) => {
         const userData = userResponse.data;
         console.log('✅ [2/3] Profil ma\'lumotlari olindi');
 
-        // Foydalanuvchini saqlash
         console.log('📤 [3/3] Foydalanuvchi saqlanmoqda...');
 
         const pinfl = userData.pinfl || code;
@@ -208,6 +333,7 @@ app.post('/api/myid/get-user-info', async (req, res, next) => {
             user.last_login = new Date();
             user.profile = userData;
             user.face_image = base64_image;
+            user.auth_method = 'sdk_direct';
             await user.save();
             console.log('✅ [3/3] Foydalanuvchi yangilandi');
         } else {
@@ -230,6 +356,154 @@ app.post('/api/myid/get-user-info', async (req, res, next) => {
                 pinfl: user.pinfl,
                 profile: userData,
             },
+        });
+    } catch (error) {
+        console.error('❌ Profil olishda xato:', error.response?.data || error.message);
+        next(error);
+    }
+});
+
+// ============================================
+// 3B. PROFIL MA'LUMOTLARINI OLISH (RASMLAR BILAN)
+// ============================================
+app.post('/api/myid/get-user-info-with-images', async (req, res, next) => {
+    try {
+        const { code, base64_image } = req.body;
+
+        if (!code) {
+            const error = new Error('code majburiy');
+            error.statusCode = 400;
+            return next(error);
+        }
+
+        console.log('📤 [1/3] Access token olinmoqda...');
+
+        const tokenResponse = await axios.post(
+            `${MYID_HOST}/api/v1/auth/clients/access-token`,
+            {
+                grant_type: 'client_credentials',
+                client_id: CLIENT_ID,
+                client_secret: CLIENT_SECRET,
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                timeout: 10000,
+            }
+        );
+
+        const accessToken = tokenResponse.data.access_token;
+        console.log('✅ [1/3] Access token olindi');
+
+        console.log('📤 [2/3] Profil ma\'lumotlari olinmoqda...');
+
+        const userResponse = await axios.get(
+            `${MYID_HOST}/api/v1/users/me`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+                timeout: 10000,
+            }
+        );
+
+        const userData = userResponse.data;
+        console.log('✅ [2/3] Profil ma\'lumotlari olindi');
+
+        console.log('📤 [3/3] Foydalanuvchi saqlanmoqda...');
+
+        const pinfl = userData.pinfl || code;
+
+        let user = await MyIdUser.findOne({ pinfl });
+
+        if (user) {
+            user.last_login = new Date();
+            user.profile = userData;
+            user.face_image = base64_image;
+            user.auth_method = 'simple_authorization';
+            await user.save();
+            console.log('✅ [3/3] Foydalanuvchi yangilandi');
+        } else {
+            user = new MyIdUser({
+                pinfl,
+                myid_code: code,
+                profile: userData,
+                face_image: base64_image,
+                auth_method: 'simple_authorization',
+                status: 'active',
+            });
+            await user.save();
+            console.log('✅ [3/3] Yangi foydalanuvchi saqlandi');
+        }
+
+        res.json({
+            success: true,
+            data: {
+                user_id: user._id,
+                pinfl: user.pinfl,
+                profile: userData,
+            },
+        });
+    } catch (error) {
+        console.error('❌ Profil olishda xato:', error.response?.data || error.message);
+        next(error);
+    }
+});
+
+// ============================================
+// 4. FOYDALANUVCHI MA'LUMOTLARINI OLISH (GET)
+// ============================================
+app.get('/api/myid/data/code=:code', async (req, res, next) => {
+    try {
+        const { code } = req.params;
+
+        if (!code) {
+            const error = new Error('code majburiy');
+            error.statusCode = 400;
+            return next(error);
+        }
+
+        console.log('📤 [1/2] Access token olinmoqda...');
+
+        // Access token olish
+        const tokenResponse = await axios.post(
+            `${MYID_HOST}/api/v1/auth/clients/access-token`,
+            {
+                grant_type: 'client_credentials',
+                client_id: CLIENT_ID,
+                client_secret: CLIENT_SECRET,
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                timeout: 10000,
+            }
+        );
+
+        const accessToken = tokenResponse.data.access_token;
+        console.log('✅ [1/2] Access token olindi');
+
+        // Profil ma'lumotlarini olish
+        console.log('📤 [2/2] Profil ma\'lumotlari olinmoqda...');
+
+        const userResponse = await axios.get(
+            `${MYID_HOST}/api/v1/users/me`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+                timeout: 10000,
+            }
+        );
+
+        const userData = userResponse.data;
+        console.log('✅ [2/2] Profil ma\'lumotlari olindi');
+
+        res.json({
+            success: true,
+            data: userData,
         });
     } catch (error) {
         console.error('❌ Profil olishda xato:', error.response?.data || error.message);

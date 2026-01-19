@@ -41,9 +41,9 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/greenmark
 app.use('/api/', apiLimiter);
 
 // MyID credentials
-const CLIENT_ID = 'quyosh_24_sdk-OYD9rRoHYRjJkpQ2LQNV0EG6KSXtKruUMkOCdY1v';
-const CLIENT_SECRET = 'JRgNV6Av8DlocKJIAozwUrx4uCOU9mDLy5D9SKsEF6EvG2VlD7FU8nup5AYlU3biDfNwOEB0S54Sgup3CB3aJNJuk2wIkG3AIOlP';
-const MYID_HOST = 'https://api.devmyid.uz'; // DEV muhiti
+const CLIENT_ID = process.env.MYID_CLIENT_ID || 'quyosh_24_sdk-OYD9rRoHYRjJkpQ2LQNV0EG6KSXtKruUMkOCdY1v';
+const CLIENT_SECRET = process.env.MYID_CLIENT_SECRET || 'JRgNV6Av8DlocKJIAozwUrx4uCOU9mDLy5D9SKsEF6EvG2VlD7FU8nup5AYlU3biDfNwOEB0S54Sgup3CB3aJNJuk2wIkG3AIOlP';
+const MYID_HOST = process.env.MYID_HOST || 'https://api.devmyid.uz'; // DEV muhiti
 
 // ============================================
 // 1. ACCESS TOKEN OLISH

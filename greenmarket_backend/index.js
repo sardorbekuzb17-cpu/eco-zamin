@@ -318,17 +318,18 @@ app.post('/api/myid/create-session', async (req, res, next) => {
     try {
         console.log('📤 Bo\'sh sessiya yaratilmoqda...');
 
-        // 1. Access token olish (qayta urinish mexanizmi bilan)
+        // 1. Access token olish (client credentials - OAuth2)
         const tokenResponse = await retryWithBackoff(async () => {
             return await axios.post(
-                `${MYID_HOST}/api/v1/auth/clients/access-token`,
-                {
+                `${MYID_HOST}/api/v1/oauth2/access-token`,
+                new URLSearchParams({
+                    grant_type: 'client_credentials',
                     client_id: CLIENT_ID,
                     client_secret: CLIENT_SECRET,
-                },
+                }),
                 {
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/x-www-form-urlencoded',
                     },
                     timeout: 10000,
                 }

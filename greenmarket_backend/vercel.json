@@ -5,5 +5,47 @@
             "src": "api/**/*.js",
             "use": "@vercel/node"
         }
+    ],
+    "routes": [
+        {
+            "src": "/api/health",
+            "dest": "/api/health.js"
+        },
+        {
+            "src": "/api/myid/get-access-token",
+            "dest": "/api/myid/get-access-token.js"
+        },
+        {
+            "src": "/api/myid/create-session",
+            "dest": "/api/myid/create-session.js"
+        },
+        {
+            "src": "/api/myid/create-session-with-passport",
+            "dest": "/api/myid/create-session-with-passport.js"
+        },
+        {
+            "src": "/api/myid/create-session-with-fields",
+            "dest": "/api/myid/create-session-with-fields.js"
+        },
+        {
+            "src": "/api/myid/get-user-info",
+            "dest": "/api/myid/get-user-info.js"
+        },
+        {
+            "src": "/api/myid/get-user-info-with-images",
+            "dest": "/api/myid/get-user-info-with-images.js"
+        },
+        {
+            "src": "/api/myid/data",
+            "dest": "/api/myid/data.js"
+        },
+        {
+            "src": "/api/myid/users",
+            "dest": "/api/myid/users.js"
+        },
+        {
+            "src": "/api/myid/stats",
+            "dest": "/api/myid/stats.js"
+        }
     ]
 }

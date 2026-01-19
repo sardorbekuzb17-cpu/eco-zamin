@@ -1,21 +1,29 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
+const myidSdkFlow = require('./myid_sdk_flow');
+const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+const { retryWithBackoff } = require('./myid_sdk_flow');
+const { encryptSensitiveData, decryptSensitiveData, sanitizeApiResponse } = require('./security/encryption');
+const { apiLimiter } = require('./middleware/rateLimiter');
 const app = express();
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // x-www-form-urlencoded uchun
 app.use(cors());
+
+// Rate limiting - barcha API endpointlariga qo'llash
+// 1 daqiqada maksimal 10 so'rov (Requirements: 5.8)
+app.use('/api/', apiLimiter);
 
 // MyID credentials (shartnomadan)
 const CLIENT_ID = 'quyosh_24_sdk-OYD9rRoHYRjJkpQ2LQNV0EG6KSXtKruUMkOCdY1v';
 const CLIENT_SECRET = 'JRgNV6Av8DlocKJIAozwUrx4uCOU9mDLy5D9SKsEF6EvG2VlD7FU8nup5AYlU3biDfNwOEB0S54Sgup3CB3aJNJuk2wIkG3AIOlP';
-const MYID_HOST = 'https://api.devmyid.uz'; // Test muhiti
-
-let bearerToken = null;
-let tokenExpiry = null;
+const USERNAME = 'quyosh_24_sdk'; // API uchun username
+const PASSWORD = 'JRgNV6Av8DlocKJIAozwUrx4uCOU9mDLy5D9SKsEF6EvG2VlD7FU8nup5AYlU3biDfNwOEB0S54Sgup3CB3aJNJuk2wIkG3AIOlP'; // API uchun password
+const MYID_HOST = 'https://api.myid.uz'; // PRODUCTION muhiti
 
 // Foydalanuvchilar bazasi (xotirada saqlash - test uchun)
-// Production'da MongoDB, PostgreSQL yoki boshqa DB ishlatish kerak
 const users = [];
 
 // Foydalanuvchi statistikasi
@@ -25,261 +33,184 @@ const stats = {
     lastRegistrationDate: null,
 };
 
-// 1. Kirish tokenini olish
-async function getBearerToken() {
-    if (bearerToken && tokenExpiry && Date.now() < tokenExpiry) {
-        console.log('✅ Mavjud token ishlatilmoqda');
-        return bearerToken;
-    }
-
+// 0. Simple Authorization - To'liq oqim (access token + session bitta so'rovda)
+app.post('/api/myid/create-simple-session-complete', async (req, res, next) => {
     try {
-        console.log('📤 Yangi token so\'ralmoqda...');
-        const response = await axios.post(
-            `${MYID_HOST}/api/v1/auth/clients/access-token`,
-            {
-                client_id: CLIENT_ID,
-                client_secret: CLIENT_SECRET,
-            },
-            {
-                headers: { 'Content-Type': 'application/json' },
-            }
-        );
+        const { pass_data, birth_date } = req.body;
 
-        bearerToken = response.data.access_token;
-        tokenExpiry = Date.now() + (response.data.expires_in || 3600) * 1000;
-
-        console.log('✅ Token olindi:', {
-            token: bearerToken.substring(0, 20) + '...',
-            expires_in: response.data.expires_in,
-        });
-
-        return bearerToken;
-    } catch (error) {
-        console.error('❌ Token xatolik:', {
-            status: error.response?.status,
-            data: error.response?.data,
-            message: error.message,
-        });
-        throw error;
-    }
-}
-
-// 2. BO'SH Session yaratish (SDK uchun) - pasport ma'lumotlari SDK'da kiritiladi
-app.post('/api/myid/create-session', async (req, res) => {
-    try {
-        console.log('📞 Bo\'sh session yaratish so\'rovi');
-
-        // Token olish
-        const token = await getBearerToken();
-
-        // Создаёт пустую сессию.
-        // Паспортные данные будут введены вручную позже.
-        // BO'SH session yaratish - pasport ma'lumotlari MyID SDK'da kiritiladi
-        const sessionData = {};
-
-        console.log('📤 MyID ga yuborilmoqda: {} (bo\'sh session)');
-        console.log('🔗 Endpoint:', `${MYID_HOST}/api/v2/sdk/sessions`);
-
-        // MyID API ga so'rov - test muhiti (v2 endpoint - to'g'ri)
-        const response = await axios.post(
-            `${MYID_HOST}/api/v2/sdk/sessions`,
-            sessionData,
-            {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
-
-        console.log('✅ Bo\'sh session yaratildi:', JSON.stringify(response.data, null, 2));
-
-        // Session ma'lumotlarini tekshirish
-        if (!response.data || !response.data.session_id) {
-            throw new Error('MyID API session_id qaytarmadi: ' + JSON.stringify(response.data));
+        if (!pass_data || !birth_date) {
+            const error = new Error('pass_data va birth_date majburiy');
+            error.statusCode = 400;
+            error.name = 'ValidationError';
+            return next(error);
         }
 
-        // Faqat session_id ni qaytarish (to'liq javob emas)
+        console.log('📤 [1/2] Access token olinmoqda (client credentials)...');
+
+        // 1. Access token olish
+        const tokenResponse = await retryWithBackoff(async () => {
+            return await axios.post(
+                `${MYID_HOST}/api/v1/oauth2/access-token`,
+                new URLSearchParams({
+                    grant_type: 'client_credentials',
+                    client_id: CLIENT_ID,
+                    client_secret: CLIENT_SECRET,
+                }),
+                {
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    timeout: 10000,
+                }
+            );
+        });
+
+        const accessToken = tokenResponse.data.access_token;
+        console.log('✅ [1/2] Access token olindi');
+
+        // 2. Simple session yaratish
+        console.log('📤 [2/2] Simple session yaratilmoqda...');
+        console.log('   Pasport:', pass_data);
+        console.log('   Tug\'ilgan sana:', birth_date);
+
+        const sessionResponse = await retryWithBackoff(async () => {
+            return await axios.post(
+                `${MYID_HOST}/api/v1/oauth2/session`,
+                {
+                    grant_type: 'simple_authorization',
+                    scope: 'address,contacts,doc_data,common_data,doc_files',
+                    pass_data: pass_data,
+                    birth_date: birth_date,
+                },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 10000,
+                }
+            );
+        });
+
+        console.log('✅ [2/2] Simple session yaratildi');
+
         res.json({
             success: true,
-            data: {
-                session_id: response.data.session_id,
-                expires_in: response.data.expires_in || 'unknown',
-                created_at: new Date().toISOString(),
-            },
+            data: sessionResponse.data,
         });
     } catch (error) {
-        console.error('❌ Session xatolik:', {
-            status: error.response?.status,
-            statusText: error.response?.statusText,
-            data: error.response?.data,
-            message: error.message,
-            url: error.config?.url,
-        });
-
-        // Agar 404 bo'lsa, endpoint noto'g'ri
-        if (error.response?.status === 404) {
-            return res.status(404).json({
-                success: false,
-                error: 'MyID API endpoint topilmadi (404)',
-                error_details: {
-                    message: 'Endpoint noto\'g\'ri yoki mavjud emas',
-                    url: `${MYID_HOST}/api/v2/sdk/sessions`,
-                    status: 404,
-                    suggestion: 'MyID support bilan bog\'laning: @myid_support',
-                },
-            });
-        }
-
-        res.status(error.response?.status || 500).json({
-            success: false,
-            error: error.response?.data || error.message,
-            error_details: {
-                message: error.message,
-                status: error.response?.status,
-                data: error.response?.data,
-                url: error.config?.url,
-            },
-        });
+        console.error('❌ Simple session yaratishda xato:', error.response?.data || error.message);
+        next(error);
     }
 });
 
-// 2.1. PASPORT bilan Session yaratish (Flutter'dan pasport ma'lumotlari bilan)
-app.post('/api/myid/create-session-with-passport', async (req, res) => {
+// 1. SDK'dan CODE va RASMLAR olish va ACCESS_TOKEN olish
+app.post('/api/myid/get-user-info-with-images', async (req, res, next) => {
     try {
-        const { passport_series, passport_number, birth_date } = req.body;
+        const { code, base64_image } = req.body;
 
-        if (!passport_series || !passport_number || !birth_date) {
-            return res.status(400).json({
-                success: false,
-                error: 'Barcha maydonlar kerak: passport_series, passport_number, birth_date',
-            });
+        if (!code) {
+            const error = new Error('code majburiy');
+            error.statusCode = 400;
+            error.name = 'ValidationError';
+            return next(error);
         }
 
-        console.log('📞 Pasport bilan session yaratish:', { passport_series, passport_number, birth_date });
+        console.log('📞 SDK\'dan code va rasm olindi:');
+        console.log('   - code:', code);
+        console.log('   - base64_image:', base64_image ? `${base64_image.length} bytes` : 'yo\'q');
 
-        // Token olish
-        const token = await getBearerToken();
+        // 1. Access token olish (qayta urinish mexanizmi bilan)
+        console.log('📤 Access token so\'ralmoqda...');
+        const tokenResponse = await retryWithBackoff(async () => {
+            return await axios.post(
+                `${MYID_HOST}/api/v1/oauth2/access-token`,
+                new URLSearchParams({
+                    grant_type: 'authorization_code',
+                    code: code,
+                    client_id: CLIENT_ID,
+                    client_secret: CLIENT_SECRET,
+                }),
+                {
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    timeout: 10000,
+                }
+            );
+        });
 
-        // Pasport ma'lumotlari bilan session yaratish
-        const sessionData = {
-            passport_series: passport_series.toUpperCase(),
-            passport_number: passport_number,
-            birth_date: birth_date, // YYYY-MM-DD formatida
+        console.log('✅ Access token olindi');
+
+        const accessToken = tokenResponse.data.access_token;
+
+        // 2. Foydalanuvchi ma'lumotlarini olish (qayta urinish mexanizmi bilan)
+        console.log('📤 Foydalanuvchi ma\'lumotlari so\'ralmoqda...');
+        const userInfoResponse = await retryWithBackoff(async () => {
+            return await axios.get(
+                `${MYID_HOST}/api/v1/users/me`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    timeout: 10000,
+                }
+            );
+        });
+
+        console.log('✅ Foydalanuvchi ma\'lumotlari olindi');
+
+        // 3. Foydalanuvchini saqlash (rasmlar bilan)
+        const userData = userInfoResponse.data;
+
+        // Maxfiy ma'lumotlarni shifrlash
+        const encryptedProfileData = encryptSensitiveData(userData);
+
+        const newUser = {
+            id: users.length + 1,
+            myid_code: code,
+            profile_data: encryptedProfileData,
+            base64_image: base64_image, // SDK'dan kelgan rasm (base64)
+            registered_at: new Date().toISOString(),
+            last_login: new Date().toISOString(),
+            status: 'active',
+            auth_method: 'simple_authorization',
         };
 
-        console.log('📤 MyID ga yuborilmoqda:', sessionData);
-        console.log('🔗 Endpoint:', `${MYID_HOST}/api/v2/sdk/sessions`);
+        users.push(newUser);
 
-        // MyID API ga so'rov
-        const response = await axios.post(
-            `${MYID_HOST}/api/v2/sdk/sessions`,
-            sessionData,
-            {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
+        // Statistikani yangilash
+        stats.totalUsers = users.length;
+        stats.todayRegistrations++;
+        stats.lastRegistrationDate = new Date().toISOString();
 
-        console.log('✅ Pasport bilan session yaratildi:', JSON.stringify(response.data, null, 2));
+        console.log('✅ Foydalanuvchi saqlandi:', newUser.id);
+        console.log('   - Rasm saqlandi:', base64_image ? 'ha' : 'yo\'q');
 
-        // Session ma'lumotlarini tekshirish
-        if (!response.data || !response.data.session_id) {
-            throw new Error('MyID API session_id qaytarmadi: ' + JSON.stringify(response.data));
-        }
-
-        // Session ID ni qaytarish
-        res.json({
+        // API javobini tozalash (client_secret'ni olib tashlash)
+        const sanitizedResponse = sanitizeApiResponse({
             success: true,
-            data: {
-                session_id: response.data.session_id,
-                expires_in: response.data.expires_in || 'unknown',
-                created_at: new Date().toISOString(),
+            message: 'Foydalanuvchi muvaffaqiyatli ro\'yxatdan o\'tdi',
+            user: {
+                id: newUser.id,
+                myid_code: newUser.myid_code,
+                registered_at: newUser.registered_at,
+                status: newUser.status,
+                auth_method: newUser.auth_method,
             },
-        });
-    } catch (error) {
-        console.error('❌ Pasport session xatolik:', {
-            status: error.response?.status,
-            statusText: error.response?.statusText,
-            data: error.response?.data,
-            message: error.message,
+            profile: userData,
         });
 
-        res.status(error.response?.status || 500).json({
-            success: false,
-            error: error.response?.data || error.message,
-            error_details: {
-                message: error.message,
-                status: error.response?.status,
-                data: error.response?.data,
-            },
-        });
+        res.json(sanitizedResponse);
+    } catch (error) {
+        next(error);
     }
 });
 
-// 3. Pasport tekshirish
-app.post('/api/myid/verify-passport', async (req, res) => {
+// 1.1. Session natijasini olish (SDK tugagandan keyin)
+app.post('/api/myid/get-session-result', async (req, res) => {
     try {
-        const { passport_series, passport_number, birth_date } = req.body;
-
-        if (!passport_series || !passport_number || !birth_date) {
-            return res.status(400).json({
-                success: false,
-                error: 'Barcha maydonlar kerak: passport_series, passport_number, birth_date',
-            });
-        }
-
-        console.log('📝 Pasport tekshirish:', { passport_series, passport_number, birth_date });
-
-        const token = await getBearerToken();
-
-        const response = await axios.post(
-            `${MYID_HOST}/api/v1/identification/passport`,
-            {
-                passport_series: passport_series.toUpperCase(),
-                passport_number: passport_number,
-                birth_date: birth_date,
-            },
-            {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
-
-        console.log('✅ Pasport tasdiqlandi');
-
-        res.json({ success: true, data: response.data });
-    } catch (error) {
-        console.error('❌ Pasport xatolik:', {
-            status: error.response?.status,
-            data: error.response?.data,
-        });
-
-        res.status(error.response?.status || 500).json({
-            success: false,
-            error: error.response?.data || error.message,
-        });
-    }
-});
-
-// Health check
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        token_status: bearerToken ? 'active' : 'not_initialized',
-        myid_host: MYID_HOST,
-    });
-});
-
-// 4. Foydalanuvchini saqlash (MyID'dan ma'lumot kelgandan keyin)
-app.post('/api/users/register', async (req, res) => {
-    try {
-        const { session_id, profile_data, passport_data } = req.body;
+        const { session_id } = req.body;
 
         if (!session_id) {
             return res.status(400).json({
@@ -288,22 +219,55 @@ app.post('/api/users/register', async (req, res) => {
             });
         }
 
-        // Foydalanuvchi allaqachon mavjudmi tekshirish
-        const existingUser = users.find(u => u.session_id === session_id);
-        if (existingUser) {
-            return res.json({
-                success: true,
-                message: 'Foydalanuvchi allaqachon ro\'yxatdan o\'tgan',
-                user: existingUser,
-            });
-        }
+        console.log('📞 Session natijasi so\'ralmoqda:', session_id);
 
-        // Yangi foydalanuvchi
+        // 1. Access token olish (qayta urinish mexanizmi bilan)
+        const tokenResponse = await retryWithBackoff(async () => {
+            return await axios.post(
+                `${MYID_HOST}/api/v1/auth/clients/access-token`,
+                {
+                    client_id: CLIENT_ID,
+                    client_secret: CLIENT_SECRET,
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 10000,
+                }
+            );
+        });
+
+        const accessToken = tokenResponse.data.access_token;
+        console.log('✅ Access token olindi');
+
+        // 2. Session natijasini olish (qayta urinish mexanizmi bilan)
+        console.log('📤 Session natijasi olinmoqda...');
+        const sessionResultResponse = await retryWithBackoff(async () => {
+            return await axios.get(
+                `${MYID_HOST}/api/v2/sdk/sessions/${session_id}`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 10000,
+                }
+            );
+        });
+
+        console.log('✅ Session natijasi olindi:', sessionResultResponse.data);
+
+        // 3. Foydalanuvchini saqlash
+        const sessionData = sessionResultResponse.data;
+
+        // Maxfiy ma'lumotlarni shifrlash
+        const encryptedProfileData = encryptSensitiveData(sessionData);
+
         const newUser = {
             id: users.length + 1,
             session_id: session_id,
-            profile_data: profile_data || null,
-            passport_data: passport_data || null,
+            profile_data: encryptedProfileData,
             registered_at: new Date().toISOString(),
             last_login: new Date().toISOString(),
             status: 'active',
@@ -316,19 +280,121 @@ app.post('/api/users/register', async (req, res) => {
         stats.todayRegistrations++;
         stats.lastRegistrationDate = new Date().toISOString();
 
-        console.log('✅ Yangi foydalanuvchi ro\'yxatdan o\'tdi:', {
-            id: newUser.id,
-            session_id: session_id,
-            total_users: stats.totalUsers,
-        });
+        console.log('✅ Foydalanuvchi saqlandi:', newUser.id);
 
-        res.json({
+        // API javobini tozalash
+        const sanitizedResponse = sanitizeApiResponse({
             success: true,
             message: 'Foydalanuvchi muvaffaqiyatli ro\'yxatdan o\'tdi',
-            user: newUser,
+            user: {
+                ...newUser,
+                profile_data: sessionData, // Deshifrlangan ma'lumotlarni qaytarish
+            },
+            profile: sessionData,
+        });
+
+        res.json(sanitizedResponse);
+    } catch (error) {
+        console.error('❌ Session natijasini olishda xatolik:', {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message,
+        });
+
+        res.status(error.response?.status || 500).json({
+            success: false,
+            error: error.response?.data || error.message,
+            error_details: {
+                message: error.message,
+                status: error.response?.status,
+                data: error.response?.data,
+            },
+        });
+    }
+});
+
+// 2. Bo'sh sessiya yaratish (pasport ma'lumotlari siz)
+app.post('/api/myid/create-session', async (req, res, next) => {
+    try {
+        console.log('📤 Bo\'sh sessiya yaratilmoqda...');
+
+        // 1. Access token olish (qayta urinish mexanizmi bilan)
+        const tokenResponse = await retryWithBackoff(async () => {
+            return await axios.post(
+                `${MYID_HOST}/api/v1/auth/clients/access-token`,
+                {
+                    client_id: CLIENT_ID,
+                    client_secret: CLIENT_SECRET,
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 10000,
+                }
+            );
+        });
+
+        const accessToken = tokenResponse.data.access_token;
+        console.log('✅ Access token olindi');
+
+        // 2. Bo'sh sessiya yaratish (YANGI API v2) (qayta urinish mexanizmi bilan)
+        const sessionResponse = await retryWithBackoff(async () => {
+            return await axios.post(
+                `${MYID_HOST}/api/v2/sdk/sessions`,
+                {}, // Bo'sh body - pasport ma'lumotlari siz
+                {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 10000,
+                }
+            );
+        });
+
+        console.log('✅ Sessiya yaratildi:', sessionResponse.data);
+
+        // MyID API javobini to'g'ri formatda qaytarish
+        // MyID API v2: {session_id: "...", expires_in: 3600}
+        // Lekin biz uni {data: {session_id: ...}} formatida qaytaramiz
+        res.json({
+            success: true,
+            session_id: sessionResponse.data.session_id,
+            data: sessionResponse.data
         });
     } catch (error) {
-        console.error('❌ Foydalanuvchini saqlashda xatolik:', error);
+        next(error);
+    }
+});
+
+// ============================================
+// SDK FLOW - DIAGRAMMAGA MUVOFIQ (YANGI!)
+// ============================================
+
+// 1+2. Access token olish va Session yaratish
+app.post('/api/myid/sdk/create-session', async (req, res) => {
+    try {
+        const { pass_data, pinfl, birth_date, phone_number, is_resident, threshold } = req.body;
+
+        const passportData = {
+            pass_data,
+            pinfl,
+            birth_date,
+            phone_number,
+            is_resident,
+            threshold,
+        };
+
+        const result = await myidSdkFlow.completeSdkFlow(passportData);
+
+        if (result.success) {
+            res.json(result);
+        } else {
+            res.status(400).json(result);
+        }
+    } catch (error) {
+        console.error('❌ SDK create-session xatosi:', error);
         res.status(500).json({
             success: false,
             error: error.message,
@@ -336,8 +402,527 @@ app.post('/api/users/register', async (req, res) => {
     }
 });
 
+// 3. SDK'dan code olish va foydalanuvchi ma'lumotlarini olish
+app.post('/api/myid/sdk/get-user-data', async (req, res, next) => {
+    try {
+        const { code } = req.body;
+
+        if (!code) {
+            const error = new Error('code majburiy');
+            error.statusCode = 400;
+            error.name = 'ValidationError';
+            return next(error);
+        }
+
+        // Access token olish
+        const tokenResult = await myidSdkFlow.getAccessToken();
+        if (!tokenResult.success) {
+            const error = new Error(tokenResult.error || 'Access token olishda xatolik');
+            error.statusCode = 400;
+            return next(error);
+        }
+
+        // Foydalanuvchi ma'lumotlarini olish
+        const userDataResult = await myidSdkFlow.retrieveUserData(tokenResult.access_token, code);
+
+        if (userDataResult.success) {
+            // Maxfiy ma'lumotlarni shifrlash
+            const encryptedProfileData = encryptSensitiveData(userDataResult.data.profile);
+
+            // Foydalanuvchini saqlash
+            const newUser = {
+                id: users.length + 1,
+                code: code,
+                profile_data: encryptedProfileData,
+                comparison_value: userDataResult.data.comparison_value,
+                registered_at: new Date().toISOString(),
+                last_login: new Date().toISOString(),
+                status: 'active',
+                method: 'sdk_flow',
+            };
+
+            users.push(newUser);
+            stats.totalUsers = users.length;
+            stats.todayRegistrations++;
+            stats.lastRegistrationDate = new Date().toISOString();
+
+            console.log('✅ Foydalanuvchi saqlandi:', newUser.id);
+
+            // API javobini tozalash
+            const sanitizedResponse = sanitizeApiResponse(userDataResult);
+            res.json(sanitizedResponse);
+        } else {
+            const error = new Error(userDataResult.error || 'Foydalanuvchi ma\'lumotlarini olishda xatolik');
+            error.statusCode = 400;
+            next(error);
+        }
+    } catch (error) {
+        next(error);
+    }
+});
+
+// ============================================
+// SDK FLOW - RASMIY USUL (client_id/client_secret)
+// ============================================
+
+// 1-QADAM: Access token olish (client credentials bilan)
+app.post('/api/myid/get-access-token', async (req, res) => {
+    try {
+        console.log('📤 [SDK FLOW] Access token olinmoqda...');
+
+        const tokenResponse = await retryWithBackoff(async () => {
+            return await axios.post(
+                `${MYID_HOST}/api/v1/auth/clients/access-token`,
+                {
+                    client_id: CLIENT_ID,
+                    client_secret: CLIENT_SECRET,
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 10000,
+                }
+            );
+        });
+
+        console.log('✅ [SDK FLOW] Access token olindi:', {
+            expires_in: tokenResponse.data.expires_in,
+        });
+
+        res.json({
+            success: true,
+            data: tokenResponse.data,
+        });
+    } catch (error) {
+        console.error('❌ [SDK FLOW] Access token olishda xatolik:', {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message,
+        });
+
+        res.status(error.response?.status || 500).json({
+            success: false,
+            error: error.response?.data || error.message,
+        });
+    }
+});
+
+// 2-QADAM: Pasport + selfie yuborish va job_id olish
+app.post('/api/myid/submit-verification', async (req, res) => {
+    try {
+        const {
+            access_token,
+            pass_data,
+            pinfl,
+            birth_date,
+            photo_base64,
+            agreed_on_terms,
+            device,
+            threshold,
+            external_id,
+            is_resident,
+        } = req.body;
+
+        if (!access_token) {
+            return res.status(400).json({
+                success: false,
+                error: 'access_token majburiy',
+            });
+        }
+
+        if (!pass_data && !pinfl) {
+            return res.status(400).json({
+                success: false,
+                error: 'pass_data yoki pinfl majburiy',
+            });
+        }
+
+        if (!birth_date || !photo_base64) {
+            return res.status(400).json({
+                success: false,
+                error: 'birth_date va photo_base64 majburiy',
+            });
+        }
+
+        console.log('📤 [SDK FLOW] Verifikatsiya so\'rovi yuborilmoqda...', {
+            pass_data,
+            pinfl,
+            birth_date,
+            photo_length: photo_base64?.length,
+            is_resident,
+        });
+
+        const requestBody = {
+            birth_date,
+            photo_from_camera: {
+                front: photo_base64,
+            },
+            agreed_on_terms: agreed_on_terms !== false,
+            client_id: CLIENT_ID,
+        };
+
+        if (pass_data) requestBody.pass_data = pass_data;
+        if (pinfl) requestBody.pinfl = pinfl;
+        if (device) requestBody.device = device;
+        if (threshold) requestBody.threshold = threshold;
+        if (external_id) requestBody.external_id = external_id;
+        if (is_resident !== undefined) requestBody.is_resident = is_resident;
+
+        const response = await retryWithBackoff(async () => {
+            return await axios.post(
+                `${MYID_HOST}/api/v1/authentication/simple-inplace-authentication-request-task`,
+                requestBody,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${access_token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 10000,
+                }
+            );
+        });
+
+        console.log('✅ [SDK FLOW] job_id olindi:', response.data.job_id);
+
+        res.json({
+            success: true,
+            data: response.data,
+        });
+    } catch (error) {
+        console.error('❌ [SDK FLOW] Verifikatsiya so\'rovida xatolik:', {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message,
+        });
+
+        res.status(error.response?.status || 500).json({
+            success: false,
+            error: error.response?.data || error.message,
+            error_details: {
+                message: error.message,
+                status: error.response?.status,
+                data: error.response?.data,
+            },
+        });
+    }
+});
+
+// 3-QADAM: job_id bilan natija olish
+app.post('/api/myid/get-result', async (req, res) => {
+    try {
+        const { access_token, job_id } = req.body;
+
+        if (!access_token || !job_id) {
+            return res.status(400).json({
+                success: false,
+                error: 'access_token va job_id majburiy',
+            });
+        }
+
+        console.log('📤 [SDK FLOW] Natija olinmoqda, job_id:', job_id);
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        const response = await retryWithBackoff(async () => {
+            return await axios.post(
+                `${MYID_HOST}/api/v1/authentication/simple-inplace-authentication-request-status?job_id=${job_id}`,
+                {},
+                {
+                    headers: {
+                        'Authorization': `Bearer ${access_token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 10000,
+                }
+            );
+        });
+
+        console.log('✅ [SDK FLOW] Natija olindi:', {
+            result_code: response.data.result_code,
+            result_note: response.data.result_note,
+        });
+
+        if (response.data.result_code === 1) {
+            // Maxfiy ma'lumotlarni shifrlash
+            const encryptedProfileData = encryptSensitiveData(response.data.profile);
+
+            const newUser = {
+                id: users.length + 1,
+                job_id: job_id,
+                profile_data: encryptedProfileData,
+                comparison_value: response.data.comparison_value,
+                registered_at: new Date().toISOString(),
+                last_login: new Date().toISOString(),
+                status: 'active',
+                method: 'sdk_flow',
+            };
+
+            users.push(newUser);
+            stats.totalUsers = users.length;
+            stats.todayRegistrations++;
+            stats.lastRegistrationDate = new Date().toISOString();
+
+            console.log('✅ [SDK FLOW] Foydalanuvchi saqlandi:', newUser.id);
+        }
+
+        // API javobini tozalash
+        const sanitizedResponse = sanitizeApiResponse({
+            success: true,
+            data: response.data,
+        });
+
+        res.json(sanitizedResponse);
+    } catch (error) {
+        console.error('❌ [SDK FLOW] Natija olishda xatolik:', {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message,
+        });
+
+        res.status(error.response?.status || 500).json({
+            success: false,
+            error: error.response?.data || error.message,
+            error_details: {
+                message: error.message,
+                status: error.response?.status,
+                data: error.response?.data,
+            },
+        });
+    }
+});
+
+// TO'LIQ SDK FLOW - Barcha qadamlarni bitta so'rovda
+app.post('/api/myid/complete', async (req, res) => {
+    try {
+        const {
+            pass_data,
+            pinfl,
+            birth_date,
+            photo_base64,
+            agreed_on_terms,
+            device,
+            threshold,
+            external_id,
+            is_resident,
+        } = req.body;
+
+        console.log('🚀 [SDK FLOW COMPLETE] Boshlandi...');
+
+        // 1. Access token olish
+        console.log('📤 [1/3] Access token olinmoqda...');
+        const tokenResponse = await retryWithBackoff(async () => {
+            return await axios.post(
+                `${MYID_HOST}/api/v1/auth/clients/access-token`,
+                {
+                    client_id: CLIENT_ID,
+                    client_secret: CLIENT_SECRET,
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 10000,
+                }
+            );
+        });
+
+        const accessToken = tokenResponse.data.access_token;
+        console.log('✅ [1/3] Access token olindi');
+
+        // 2. Verifikatsiya so'rovi yuborish
+        console.log('📤 [2/3] Verifikatsiya so\'rovi yuborilmoqda...');
+        const requestBody = {
+            birth_date,
+            photo_from_camera: {
+                front: photo_base64,
+            },
+            agreed_on_terms: agreed_on_terms !== false,
+            client_id: CLIENT_ID,
+        };
+
+        if (pass_data) requestBody.pass_data = pass_data;
+        if (pinfl) requestBody.pinfl = pinfl;
+        if (device) requestBody.device = device;
+        if (threshold) requestBody.threshold = threshold;
+        if (external_id) requestBody.external_id = external_id;
+        if (is_resident !== undefined) requestBody.is_resident = is_resident;
+
+        const verifyResponse = await retryWithBackoff(async () => {
+            return await axios.post(
+                `${MYID_HOST}/api/v1/authentication/simple-inplace-authentication-request-task`,
+                requestBody,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 10000,
+                }
+            );
+        });
+
+        const jobId = verifyResponse.data.job_id;
+        console.log('✅ [2/3] job_id olindi:', jobId);
+
+        // 3. Natija olish (0.5 soniya kutish)
+        console.log('⏳ [3/3] 0.5 soniya kutilmoqda...');
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        console.log('📤 [3/3] Natija olinmoqda...');
+        const resultResponse = await retryWithBackoff(async () => {
+            return await axios.post(
+                `${MYID_HOST}/api/v1/authentication/simple-inplace-authentication-request-status?job_id=${jobId}`,
+                {},
+                {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 10000,
+                }
+            );
+        });
+
+        console.log('✅ [3/3] Natija olindi:', {
+            result_code: resultResponse.data.result_code,
+            result_note: resultResponse.data.result_note,
+        });
+
+        if (resultResponse.data.result_code === 1) {
+            // Maxfiy ma'lumotlarni shifrlash
+            const encryptedProfileData = encryptSensitiveData(resultResponse.data.profile);
+
+            const newUser = {
+                id: users.length + 1,
+                job_id: jobId,
+                profile_data: encryptedProfileData,
+                comparison_value: resultResponse.data.comparison_value,
+                registered_at: new Date().toISOString(),
+                last_login: new Date().toISOString(),
+                status: 'active',
+                method: 'sdk_flow_complete',
+            };
+
+            users.push(newUser);
+            stats.totalUsers = users.length;
+            stats.todayRegistrations++;
+            stats.lastRegistrationDate = new Date().toISOString();
+
+            console.log('✅ Foydalanuvchi saqlandi:', newUser.id);
+        }
+
+        // API javobini tozalash
+        const sanitizedResponse = sanitizeApiResponse({
+            success: true,
+            message: 'SDK Flow muvaffaqiyatli yakunlandi',
+            data: resultResponse.data,
+            job_id: jobId,
+        });
+
+        res.json(sanitizedResponse);
+    } catch (error) {
+        console.error('❌ [SDK FLOW COMPLETE] Xatolik:', {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message,
+        });
+
+        res.status(error.response?.status || 500).json({
+            success: false,
+            error: error.response?.data || error.message,
+            error_details: {
+                message: error.message,
+                status: error.response?.status,
+                data: error.response?.data,
+            },
+        });
+    }
+});
+
+// ============================================
+// ESKI USULLAR (SDK bilan sessiya yaratish)
+// ============================================
+
+// 3. Pasport ma'lumotlari bilan sessiya yaratish
+app.post('/api/myid/create-session-with-passport', async (req, res) => {
+    try {
+        const { phone_number, birth_date, is_resident, pass_data, pinfl, threshold } = req.body;
+
+        console.log('📤 Pasport bilan sessiya yaratilmoqda...', {
+            phone_number,
+            birth_date,
+            is_resident,
+            pass_data,
+            pinfl,
+            threshold,
+        });
+
+        // 1. Access token olish (qayta urinish mexanizmi bilan)
+        const tokenResponse = await retryWithBackoff(async () => {
+            return await axios.post(
+                `${MYID_HOST}/api/v1/auth/clients/access-token`,
+                {
+                    client_id: CLIENT_ID,
+                    client_secret: CLIENT_SECRET,
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 10000,
+                }
+            );
+        });
+
+        const accessToken = tokenResponse.data.access_token;
+        console.log('✅ Access token olindi');
+
+        // 2. Pasport bilan sessiya yaratish (YANGI API v2) (qayta urinish mexanizmi bilan)
+        const sessionData = {};
+        if (phone_number) sessionData.phone_number = phone_number;
+        if (birth_date) sessionData.birth_date = birth_date;
+        if (is_resident !== undefined) sessionData.is_resident = is_resident;
+        if (pass_data) sessionData.pass_data = pass_data;
+        if (pinfl) sessionData.pinfl = pinfl;
+        if (threshold) sessionData.threshold = threshold;
+
+        const sessionResponse = await retryWithBackoff(async () => {
+            return await axios.post(
+                `${MYID_HOST}/api/v2/sdk/sessions`,
+                sessionData,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 10000,
+                }
+            );
+        });
+
+        console.log('✅ Sessiya yaratildi:', sessionResponse.data);
+
+        res.json({
+            success: true,
+            data: sessionResponse.data,
+        });
+    } catch (error) {
+        console.error('❌ Sessiya yaratishda xatolik:', {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message,
+        });
+
+        res.status(error.response?.status || 500).json({
+            success: false,
+            error: error.response?.data || error.message,
+        });
+    }
+});
+
 // 5. Barcha foydalanuvchilarni ko'rish
-app.get('/api/users', (req, res) => {
+app.get('/api/users', (req, res, next) => {
     try {
         const { page = 1, limit = 10, status } = req.query;
 
@@ -353,10 +938,17 @@ app.get('/api/users', (req, res) => {
         const endIndex = page * limit;
         const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
 
-        res.json({
+        // Maxfiy ma'lumotlarni deshifrlash (faqat ko'rsatish uchun)
+        const decryptedUsers = paginatedUsers.map(user => ({
+            ...user,
+            profile_data: decryptSensitiveData(user.profile_data),
+        }));
+
+        // API javobini tozalash
+        const sanitizedResponse = sanitizeApiResponse({
             success: true,
             data: {
-                users: paginatedUsers,
+                users: decryptedUsers,
                 pagination: {
                     total: filteredUsers.length,
                     page: parseInt(page),
@@ -366,43 +958,45 @@ app.get('/api/users', (req, res) => {
                 stats: stats,
             },
         });
+
+        res.json(sanitizedResponse);
     } catch (error) {
-        console.error('❌ Foydalanuvchilarni olishda xatolik:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message,
-        });
+        next(error);
     }
 });
 
 // 6. Bitta foydalanuvchini ko'rish
-app.get('/api/users/:id', (req, res) => {
+app.get('/api/users/:id', (req, res, next) => {
     try {
         const userId = parseInt(req.params.id);
         const user = users.find(u => u.id === userId);
 
         if (!user) {
-            return res.status(404).json({
-                success: false,
-                error: 'Foydalanuvchi topilmadi',
-            });
+            const error = new Error('Foydalanuvchi topilmadi');
+            error.statusCode = 404;
+            return next(error);
         }
 
-        res.json({
+        // Maxfiy ma'lumotlarni deshifrlash
+        const decryptedUser = {
+            ...user,
+            profile_data: decryptSensitiveData(user.profile_data),
+        };
+
+        // API javobini tozalash
+        const sanitizedResponse = sanitizeApiResponse({
             success: true,
-            user: user,
+            user: decryptedUser,
         });
+
+        res.json(sanitizedResponse);
     } catch (error) {
-        console.error('❌ Foydalanuvchini olishda xatolik:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message,
-        });
+        next(error);
     }
 });
 
 // 7. Foydalanuvchi statistikasi
-app.get('/api/users/stats/summary', (req, res) => {
+app.get('/api/users/stats/summary', (req, res, next) => {
     try {
         const today = new Date().toISOString().split('T')[0];
         const todayUsers = users.filter(u =>
@@ -423,25 +1017,20 @@ app.get('/api/users/stats/summary', (req, res) => {
             },
         });
     } catch (error) {
-        console.error('❌ Statistikani olishda xatolik:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message,
-        });
+        next(error);
     }
 });
 
 // 8. Foydalanuvchini o'chirish
-app.delete('/api/users/:id', (req, res) => {
+app.delete('/api/users/:id', (req, res, next) => {
     try {
         const userId = parseInt(req.params.id);
         const userIndex = users.findIndex(u => u.id === userId);
 
         if (userIndex === -1) {
-            return res.status(404).json({
-                success: false,
-                error: 'Foydalanuvchi topilmadi',
-            });
+            const error = new Error('Foydalanuvchi topilmadi');
+            error.statusCode = 404;
+            return next(error);
         }
 
         const deletedUser = users.splice(userIndex, 1)[0];
@@ -455,11 +1044,7 @@ app.delete('/api/users/:id', (req, res) => {
             user: deletedUser,
         });
     } catch (error) {
-        console.error('❌ Foydalanuvchini o\'chirishda xatolik:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message,
-        });
+        next(error);
     }
 });
 
@@ -485,6 +1070,13 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+
+// 404 xatosi uchun middleware (barcha route'lardan keyin)
+app.use(notFoundHandler);
+
+// Xato handler middleware (eng oxirida)
+app.use(errorHandler);
+
 app.listen(PORT, () => {
     console.log(`🚀 Server ${PORT} portda ishlamoqda`);
     console.log(`🔗 MyID Host: ${MYID_HOST}`);

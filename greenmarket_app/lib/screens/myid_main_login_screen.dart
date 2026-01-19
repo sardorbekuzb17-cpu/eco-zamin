@@ -174,23 +174,21 @@ class _MyIdMainLoginScreenState extends State<MyIdMainLoginScreen> {
 
                 const SizedBox(height: 12),
 
-                // Bo'sh Session tugmasi - Backend orqali
+                // To'liq Oqim tugmasi - Rasmga muvofiq
                 SizedBox(
                   width: double.infinity,
                   height: 56,
-                  child: OutlinedButton(
+                  child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/empty-session');
+                      Navigator.pushNamed(context, '/complete-flow');
                     },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF0066cc),
-                      side: const BorderSide(
-                        color: Color(0xFF0066cc),
-                        width: 2,
-                      ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF9C27B0),
+                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
+                      elevation: 2,
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -199,14 +197,14 @@ class _MyIdMainLoginScreenState extends State<MyIdMainLoginScreen> {
                           width: 32,
                           height: 32,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0066cc),
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Center(
                             child: Text(
                               'ID',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: Color(0xFF9C27B0),
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
                               ),
@@ -216,7 +214,7 @@ class _MyIdMainLoginScreenState extends State<MyIdMainLoginScreen> {
                         const SizedBox(width: 12),
                         const Flexible(
                           child: Text(
-                            'Bo\'sh session (Backend)',
+                            'To\'liq Oqim (Rasmga muvofiq)',
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,

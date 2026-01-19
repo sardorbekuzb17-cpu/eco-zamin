@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:convert';
 import 'home_screen.dart';
+import '../widgets/myid_error_dialog.dart';
+import '../l10n/app_localizations.dart';
 
 class MyIDLoginScreenV2 extends StatefulWidget {
   const MyIDLoginScreenV2({super.key});
@@ -16,7 +18,6 @@ class MyIDLoginScreenV2 extends StatefulWidget {
 
 class _MyIDLoginScreenV2State extends State<MyIDLoginScreenV2> {
   bool _isLoading = false;
-  String? _errorMessage;
 
   @override
   void initState() {
@@ -38,7 +39,6 @@ class _MyIDLoginScreenV2State extends State<MyIDLoginScreenV2> {
   Future<void> _loginWithMyID() async {
     setState(() {
       _isLoading = true;
-      _errorMessage = null;
     });
 
     try {
@@ -54,7 +54,7 @@ class _MyIDLoginScreenV2State extends State<MyIDLoginScreenV2> {
           sessionId: sessionId,
           clientHash: clientHash,
           clientHashId: clientHashId,
-          environment: MyIdEnvironment.PRODUCTION,
+          environment: MyIdEnvironment.DEBUG,
           entryType: MyIdEntryType.IDENTIFICATION,
         ),
       );
@@ -70,9 +70,10 @@ class _MyIDLoginScreenV2State extends State<MyIDLoginScreenV2> {
         await prefs.setString('myid_code', myIdResult.code!);
 
         if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('MyID muvaffaqiyatli!'),
+            SnackBar(
+              content: Text(l10n.translate('myid_success_message')),
               backgroundColor: Colors.green,
             ),
           );
@@ -82,14 +83,32 @@ class _MyIDLoginScreenV2State extends State<MyIDLoginScreenV2> {
           );
         }
       } else {
-        setState(() {
-          _errorMessage = 'MyID bekor qilindi';
-        });
+        // Bekor qilindi
+        if (mounted) {
+          await MyIdErrorDialog.show(
+            context: context,
+            errorType: 'cancelled',
+            onRetry: _loginWithMyID,
+            onCancel: () {
+              Navigator.pop(context);
+              setState(() => _isLoading = false);
+            },
+          );
+        }
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Xatolik: ${e.toString()}';
-      });
+      if (mounted) {
+        await MyIdErrorDialog.show(
+          context: context,
+          errorType: 'sdk_error',
+          customMessage: e.toString(),
+          onRetry: _loginWithMyID,
+          onCancel: () {
+            Navigator.pop(context);
+            setState(() => _isLoading = false);
+          },
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -99,6 +118,8 @@ class _MyIDLoginScreenV2State extends State<MyIDLoginScreenV2> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -133,36 +154,15 @@ class _MyIDLoginScreenV2State extends State<MyIDLoginScreenV2> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Ekologik bozor platformasiga xush kelibsiz',
+                      Text(
+                        l10n.translate('myid_subtitle'),
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
                       ),
                       const SizedBox(height: 32),
-
-                      if (_errorMessage != null) ...[
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.red[50],
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.red[200]!),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.error_outline, color: Colors.red[700]),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  _errorMessage!,
-                                  style: TextStyle(color: Colors.red[700]),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
 
                       SizedBox(
                         width: double.infinity,
@@ -205,9 +205,9 @@ class _MyIDLoginScreenV2State extends State<MyIDLoginScreenV2> {
                                       ),
                                     ),
                                     const SizedBox(width: 12),
-                                    const Text(
-                                      'MyID orqali kirish',
-                                      style: TextStyle(
+                                    Text(
+                                      l10n.translate('myid_login_button'),
+                                      style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -232,7 +232,7 @@ class _MyIDLoginScreenV2State extends State<MyIDLoginScreenV2> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'MyID ilovasini telefoningizga o\'rnatgan bo\'lishingiz kerak',
+                                l10n.translate('myid_info_message'),
                                 style: TextStyle(
                                   color: Colors.blue[700],
                                   fontSize: 12,

@@ -26,6 +26,14 @@ import 'screens/myid_passport_input_screen.dart';
 import 'screens/myid_profile_screen.dart';
 import 'screens/myid_main_login_screen.dart';
 import 'screens/admin_users_screen.dart';
+import 'screens/myid_simple_test_screen.dart';
+import 'screens/myid_diagram_flow_screen.dart';
+import 'screens/myid_api_flow_screen.dart';
+import 'screens/myid_simple_flow_screen.dart';
+import 'screens/myid_sdk_flow_screen.dart';
+import 'screens/myid_simple_auth_screen.dart';
+import 'screens/myid_empty_session_screen.dart';
+import 'screens/myid_sdk_direct_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -84,10 +92,32 @@ class GreenMarketApp extends StatefulWidget {
 class _GreenMarketAppState extends State<GreenMarketApp> {
   Locale _locale = const Locale('uz');
 
-  void setLocale(Locale locale) {
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedLocale();
+  }
+
+  // Saqlangan tilni yuklash
+  Future<void> _loadSavedLocale() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('language');
+    if (savedLanguage != null) {
+      setState(() {
+        _locale = Locale(savedLanguage);
+      });
+    }
+  }
+
+  // Tilni o'zgartirish va saqlash
+  void setLocale(Locale locale) async {
     setState(() {
       _locale = locale;
     });
+
+    // Tanlangan tilni local storage'da saqlash
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('language', locale.languageCode);
   }
 
   @override
@@ -116,7 +146,13 @@ class _GreenMarketAppState extends State<GreenMarketApp> {
       home: const AuthWrapper(),
       routes: {
         '/home': (context) => const HomePage(),
-        '/login': (context) => const MyIdDirectSdkScreen(),
+        '/login': (context) => MyIdSdkFlowScreen(),
+        '/direct-sdk': (context) => const MyIdDirectSdkScreen(),
+        '/api-flow': (context) => const MyIdApiFlowScreen(),
+        '/sdk-flow': (context) => const MyIdSimpleFlowScreen(),
+        '/simple-auth': (context) => const MyIdSimpleAuthScreen(),
+        '/empty-session': (context) => const MyIdEmptySessionScreen(),
+        '/sdk-direct': (context) => const MyIdSdkDirectScreen(),
         '/oauth-test': (context) => const MyIdOAuthTestScreen(),
         '/oauth-login': (context) => const MyIdOAuthFullLoginScreen(),
         '/complete-login': (context) => const MyIdCompleteLoginScreen(),
@@ -124,6 +160,8 @@ class _GreenMarketAppState extends State<GreenMarketApp> {
         '/passport-input': (context) => const MyIdPassportInputScreen(),
         '/profile': (context) => const MyIdProfileScreen(),
         '/admin-users': (context) => const AdminUsersScreen(),
+        '/simple-test': (context) => const MyIdSimpleTestScreen(),
+        '/diagram-flow': (context) => const MyIdDiagramFlowScreen(),
       },
     );
   }

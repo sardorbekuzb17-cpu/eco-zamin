@@ -215,6 +215,10 @@ class _MyIdProfileScreenState extends State<MyIdProfileScreen> {
                     if (_profile?.issuedBy != null) _buildDocumentCard(),
                     if (_profile?.issuedBy != null) const SizedBox(height: 16),
 
+                    // Sozlamalar bo'limi
+                    _buildSettingsCard(),
+                    const SizedBox(height: 16),
+
                     // Yangilash tugmasi
                     SizedBox(
                       width: double.infinity,
@@ -508,6 +512,132 @@ class _MyIdProfileScreenState extends State<MyIdProfileScreen> {
             child: Text(value, style: const TextStyle(fontSize: 16)),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.settings, color: Colors.grey[700]),
+                const SizedBox(width: 8),
+                const Text(
+                  'Sozlamalar',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const Divider(),
+
+            // Til sozlamalari
+            ListTile(
+              leading: const Icon(Icons.language),
+              title: const Text('Til'),
+              subtitle: const Text('O\'zbek tili'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                // Til sozlamalariga o'tish
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Til sozlamalari tez orada qo\'shiladi'),
+                  ),
+                );
+              },
+            ),
+
+            // Xavfsizlik sozlamalari
+            ListTile(
+              leading: const Icon(Icons.security),
+              title: const Text('Xavfsizlik'),
+              subtitle: const Text('Parol va xavfsizlik sozlamalari'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                // Xavfsizlik sozlamalariga o'tish
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Xavfsizlik sozlamalari tez orada qo\'shiladi',
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            // Bildirishnomalar
+            ListTile(
+              leading: const Icon(Icons.notifications),
+              title: const Text('Bildirishnomalar'),
+              subtitle: const Text('Push bildirishnomalarni boshqarish'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                // Bildirishnomalar sozlamalariga o'tish
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Bildirishnomalar sozlamalari tez orada qo\'shiladi',
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            // Yordam
+            ListTile(
+              leading: const Icon(Icons.help_outline),
+              title: const Text('Yordam'),
+              subtitle: const Text('Qo\'llab-quvvatlash va FAQ'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                // Yordam sahifasiga o'tish
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Yordam sahifasi tez orada qo\'shiladi'),
+                  ),
+                );
+              },
+            ),
+
+            // Ilova haqida
+            ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: const Text('Ilova haqida'),
+              subtitle: const Text('Versiya 1.0.0'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                // Ilova haqida ma'lumot
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('GreenMarket'),
+                    content: const Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Versiya: 1.0.0'),
+                        SizedBox(height: 8),
+                        Text('MyID integratsiyasi bilan'),
+                        SizedBox(height: 8),
+                        Text('© 2024 GreenMarket'),
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Yopish'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

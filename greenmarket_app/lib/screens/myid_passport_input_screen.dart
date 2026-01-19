@@ -43,10 +43,13 @@ class _MyIdPassportInputScreenState extends State<MyIdPassportInputScreen> {
       // 1. Backend'dan pasport bilan sessiya olish
       setState(() => _statusMessage = 'Backend\'dan sessiya olinmoqda...');
 
+      final passportData =
+          '${_passportSeriesController.text.trim()}${_passportNumberController.text.trim()}';
+
       final sessionResult = await MyIdBackendClient.createSessionWithPassport(
-        passportSeries: _passportSeriesController.text.trim(),
-        passportNumber: _passportNumberController.text.trim(),
+        passData: passportData,
         birthDate: _birthDateController.text.trim(),
+        isResident: true,
       );
 
       if (sessionResult['success'] != true) {
@@ -57,15 +60,12 @@ class _MyIdPassportInputScreenState extends State<MyIdPassportInputScreen> {
         return;
       }
 
-      final sessionId = sessionResult['session_id'] as String;
+      final sessionId = sessionResult['data']['session_id'];
 
       // 2. SDK'ni ishga tushirish
       setState(() => _statusMessage = 'MyID SDK ishga tushirilmoqda...');
 
-      final sdkResult = await MyIdBackendClient.startSDK(
-        sessionId: sessionId,
-        forcePassportScreen: false, // Pasport ma'lumotlari allaqachon berilgan
-      );
+      final sdkResult = await MyIdBackendClient.startSDK(sessionId: sessionId);
 
       if (sdkResult['success'] != true) {
         setState(() {

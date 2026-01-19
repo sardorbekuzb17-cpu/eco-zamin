@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
-import '../services/myid_backend_client.dart';
 
 class MyIdMainLoginScreen extends StatefulWidget {
   const MyIdMainLoginScreen({super.key});
@@ -11,80 +8,22 @@ class MyIdMainLoginScreen extends StatefulWidget {
 }
 
 class _MyIdMainLoginScreenState extends State<MyIdMainLoginScreen> {
-  bool _isLoading = false;
-  String? _statusMessage;
-  String? _errorMessage;
-
-  @override
-  void initState() {
-    super.initState();
-    // Ilova ochilishi bilan avtomatik bo'sh sessiya yaratish
-    _autoStartAuth();
-  }
-
-  Future<void> _autoStartAuth() async {
-    // 1 soniya kutib, keyin avtomatik boshlash
-    await Future.delayed(const Duration(seconds: 1));
-    if (mounted) {
-      _startBackendAuth();
-    }
-  }
-
-  Future<void> _startBackendAuth() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      // Backend orqali to'liq jarayon
-      final result = await MyIdBackendClient.completeAuthFlowWithBackend(
-        onStatusUpdate: (status) {
-          if (mounted) {
-            setState(() => _statusMessage = status);
-          }
-        },
-      );
-
-      if (result['success'] == true) {
-        // Ma'lumotlarni saqlash
-        final prefs = await SharedPreferences.getInstance();
-
-        final userData = {
-          'session_id': result['session_id'],
-          'code': result['code'],
-          'timestamp': DateTime.now().toIso8601String(),
-          'verified': true,
-          'method': 'backend_auto',
-        };
-
-        await prefs.setString('user_data', json.encode(userData));
-
-        if (mounted) {
-          // Home sahifasiga o'tish
-          Navigator.pushReplacementNamed(context, '/home');
-        }
-      } else {
-        setState(() {
-          _errorMessage = result['error'] ?? 'Noma\'lum xatolik';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Xatolik: ${e.toString()}';
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-        _statusMessage = null;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAF9),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'GreenMarket',
+          style: TextStyle(
+            color: Color(0xFF1A2E1A),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -128,123 +67,167 @@ class _MyIdMainLoginScreenState extends State<MyIdMainLoginScreen> {
                 ),
                 const SizedBox(height: 48),
 
-                // Status xabari
-                if (_statusMessage != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.blue[200]!),
+                // SDK To'g'ridan-To'g'ri tugmasi - ENG ODDIY (TAVSIYA)
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/sdk-direct');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF00C853),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 2,
                     ),
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.blue[700],
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            _statusMessage!,
-                            style: TextStyle(color: Colors.blue[700]),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-
-                // Loading yoki tugma
-                if (_isLoading)
-                  const Column(
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 16),
-                      Text(
-                        'MyID SDK ishga tushirilmoqda...',
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
-                      ),
-                    ],
-                  )
-                else
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: _startBackendAuth,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0066cc),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Center(
-                              child: Text(
-                                'ID',
-                                style: TextStyle(
-                                  color: Color(0xFF0066cc),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
+                          child: const Center(
+                            child: Text(
+                              'ID',
+                              style: TextStyle(
+                                color: Color(0xFF00C853),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            'MyID orqali kirish',
+                        ),
+                        const SizedBox(width: 12),
+                        const Flexible(
+                          child: Text(
+                            'SDK To\'g\'ridan-To\'g\'ri (Tavsiya)',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 15,
                               fontWeight: FontWeight.w600,
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                // Xatolik
-                if (_errorMessage != null) ...[
-                  const SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.red[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.red[200]!),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.error_outline, color: Colors.red[700]),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            _errorMessage!,
-                            style: TextStyle(color: Colors.red[700]),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ],
+                ),
+
+                const SizedBox(height: 12),
+
+                // Simple Authorization tugmasi - Pasport bilan
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/simple-auth');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0066cc),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 2,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'ID',
+                              style: TextStyle(
+                                color: Color(0xFF0066cc),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Pasport bilan kirish',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Bo'sh Session tugmasi - Backend orqali
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/empty-session');
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF0066cc),
+                      side: const BorderSide(
+                        color: Color(0xFF0066cc),
+                        width: 2,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0066cc),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'ID',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Flexible(
+                          child: Text(
+                            'Bo\'sh session (Backend)',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
 
                 const SizedBox(height: 32),
 
@@ -252,19 +235,20 @@ class _MyIdMainLoginScreenState extends State<MyIdMainLoginScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.blue[50],
+                    color: Colors.green[50],
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.blue[700]),
+                      Icon(Icons.info_outline, color: Colors.green[700]),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'MyID - O\'zbekiston Respublikasining rasmiy identifikatsiya tizimi',
+                          'Tavsiya: "SDK To\'g\'ridan-To\'g\'ri" - eng oddiy va tez usul!',
                           style: TextStyle(
-                            color: Colors.blue[700],
+                            color: Colors.green[700],
                             fontSize: 13,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),

@@ -15,6 +15,7 @@ GreenMarket - bu shunchaki onlayn do'kon emas, bu ekologik toza kelajak uchun ha
 - 💰 **Adolatli Narxlar** - Vositachilarsiz to'g'ridan-to'g'ri narxlar
 - 🌍 **Ekologik Toza** - CO2 absorbsiyasi va ekologik sertifikatlar
 - 🔒 **Xavfsizlik** - Zamonaviy xavfsizlik tizimlari va ma'lumotlar himoyasi
+- 🆔 **MyID Integratsiyasi** - O'zbekiston Respublikasi pasport ma'lumotlari orqali xavfsiz autentifikatsiya
 - 📊 **Statistika** - Buyurtmalar tarixi va shaxsiy statistika
 
 ### 🎨 Texnologiyalar
@@ -30,10 +31,14 @@ GreenMarket - bu shunchaki onlayn do'kon emas, bu ekologik toza kelajak uchun ha
 - Flutter 3.x
 - Dart
 - Material Design
+- MyID SDK 3.1.41 (Autentifikatsiya)
 
 **Backend & Services:**
 
+- Node.js 18+
+- Express.js 4.x
 - RESTful API
+- MyID OAuth 2.0 API
 - LocalStorage
 - Cloud Storage
 
@@ -73,7 +78,11 @@ eco-zamin/
 │
 ├── 🔧 Backend & API
 │   ├── greenmarket_api/        # API serverlari
-│   └── greenmarket_backend/    # Backend xizmatlari
+│   ├── greenmarket_backend/    # Backend xizmatlari
+│   │   ├── index.js            # Express server
+│   │   ├── myid_sdk_flow.js    # MyID integratsiyasi
+│   │   └── __tests__/          # Backend testlari
+│   └── .env                    # Environment variables
 │
 ├── 🧪 Tests
 │   └── __tests__/              # Test fayllari
@@ -86,6 +95,13 @@ eco-zamin/
 
 ## 🚀 Boshlash
 
+### Talablar
+
+- Node.js 18 yoki undan yuqori
+- Flutter 3.x
+- Git
+- MyID Client ID va Client Secret (production uchun)
+
 ### O'rnatish
 
 ```bash
@@ -95,9 +111,28 @@ cd eco-zamin
 
 # Bog'liqliklarni o'rnatish
 npm install
+
+# Backend uchun environment variables sozlash
+cd greenmarket_backend
+cp .env.example .env
+# .env faylida MYID_CLIENT_ID va MYID_CLIENT_SECRET ni to'ldiring
 ```
 
 ### Ishga Tushirish
+
+**Backend server:**
+
+```bash
+cd greenmarket_backend
+
+# Development rejimida
+npm run dev
+
+# Production rejimida
+npm start
+```
+
+Server `http://localhost:3000` da ishga tushadi.
 
 **Web versiyasi:**
 
@@ -132,6 +167,9 @@ flutter build ios
 ## 🧪 Testlar
 
 ```bash
+# Backend testlari
+cd greenmarket_backend
+
 # Barcha testlarni ishga tushirish
 npm test
 
@@ -140,7 +178,123 @@ npm run test:watch
 
 # Coverage bilan testlar
 npm run test:coverage
+
+# Property-based testlar
+npm run test:property
+
+# Flutter testlari
+cd greenmarket_app
+
+# Widget testlarni ishga tushirish
+flutter test
+
+# Coverage bilan testlar
+flutter test --coverage
 ```
+
+## 🆔 MyID Integratsiyasi
+
+GreenMarket platformasi O'zbekiston Respublikasining milliy identifikatsiya tizimi **MyID** bilan integratsiya qilingan. Bu foydalanuvchilarga pasport ma'lumotlari va yuz tanish texnologiyasi orqali xavfsiz autentifikatsiya qilish imkoniyatini beradi.
+
+### MyID Xususiyatlari
+
+- 🔐 **OAuth 2.0 Autentifikatsiya** - Xavfsiz token-based autentifikatsiya
+- 👤 **Yuz Tanish** - MyID SDK orqali biometrik identifikatsiya
+- 📱 **Mobil SDK** - Flutter ilovada to'liq integratsiya
+- 🔒 **Ma'lumotlar Xavfsizligi** - HTTPS va AES-256 shifrlash
+- 🌐 **Ko'p Tillilik** - O'zbek, Rus va Ingliz tillarida
+
+### MyID Autentifikatsiya Oqimi
+
+1. **Sessiya Yaratish** - Backend MyID API'dan sessiya yaratadi
+2. **SDK Ishga Tushirish** - Mobil ilovada MyID SDK ishga tushadi
+3. **Yuz Tanish** - Foydalanuvchi yuzini kameraga ko'rsatadi
+4. **Identifikatsiya** - MyID tizimi foydalanuvchini tasdiqlaydi
+5. **Ma'lumotlar Olish** - Backend foydalanuvchi ma'lumotlarini oladi
+6. **Kirish** - Foydalanuvchi tizimga kiritiladi
+
+### MyID API Endpointlari
+
+**Backend API:**
+
+```bash
+# Sessiya yaratish
+POST /api/myid/create-session
+Response: { session_id, expires_in }
+
+# Foydalanuvchi ma'lumotlarini olish
+POST /api/myid/sdk/get-user-data
+Body: { code }
+Response: { profile, comparison_value }
+
+# Access token olish (test uchun)
+POST /api/myid/get-access-token
+Response: { access_token, expires_in }
+
+# Foydalanuvchilar ro'yxati
+GET /api/users?page=1&limit=10&status=active
+Response: { users, pagination, stats }
+```
+
+### MyID Konfiguratsiyasi
+
+**Backend (.env):**
+
+```env
+MYID_CLIENT_ID=your_client_id
+MYID_CLIENT_SECRET=your_client_secret
+MYID_BASE_URL=https://api.myid.uz
+```
+
+**Flutter (MyID SDK):**
+
+```dart
+final config = MyIdConfig(
+  sessionId: sessionId,
+  clientHash: 'your_client_hash',
+  clientHashId: 'your_client_hash_id',
+  environment: MyIdEnvironment.PRODUCTION,
+  entryType: MyIdEntryType.IDENTIFICATION,
+  locale: MyIdLocale.UZBEK,
+);
+
+final result = await MyIdClient.start(config: config);
+```
+
+### MyID Xavfsizlik
+
+- ✅ Barcha so'rovlar HTTPS orqali
+- ✅ Access token 7 kun amal qiladi
+- ✅ Session ID bir martalik va 1 soat amal qiladi
+- ✅ Maxfiy ma'lumotlar shifrlangan
+- ✅ Rate limiting (1 daqiqada 10 so'rov)
+- ✅ Client secret hech qachon frontend'ga yuborilmaydi
+
+### MyID Test Rejimi
+
+Development muhitida MyID test rejimini ishlatish mumkin:
+
+```dart
+environment: MyIdEnvironment.DEBUG  // Test rejimi
+```
+
+**Eslatma:** Production'da faqat `MyIdEnvironment.PRODUCTION` ishlatiladi.
+
+### MyID Xato Kodlari
+
+| Kod | Ma'nosi | Harakat |
+|-----|---------|---------|
+| `0` | Muvaffaqiyatli | Davom etish |
+| `1` | Bekor qilindi | Qayta urinish taklifi |
+| `2` | Xato | Xato xabarini ko'rsatish |
+| `3` | Timeout | Qayta urinish |
+
+### MyID Hujjatlar
+
+To'liq hujjatlar uchun qarang:
+- [MyID Rasmiy Hujjatlari](https://docs.myid.uz)
+- [MyID SDK GitHub](https://github.com/MyIDUz/myid-flutter-sdk)
+- [GreenMarket MyID Spec](.kiro/specs/myid-integration-v2/)
 
 ## 📊 Ma'lumot Modellari
 
@@ -200,7 +354,11 @@ LocalStorage operatsiyalarini xatoliklarni boshqarish bilan amalga oshiradi
 
 ### SecurityService
 
-Xavfsizlik va autentifikatsiya xizmatlarini ta'minlaydi
+Xavfsizlik va autentifikatsiya xizmatlarini ta'minlaydi, MyID integratsiyasini boshqaradi
+
+### MyIdBackendService
+
+MyID backend API bilan aloqani boshqaradi (sessiya yaratish, foydalanuvchi ma'lumotlarini olish)
 
 ### ApiService
 
@@ -225,12 +383,14 @@ Ilova versiyalarini kuzatish va yangilash
 ### Mobil Ilova
 
 - ✅ AI bog'bon maslahatchi
+- ✅ MyID autentifikatsiya (pasport va yuz tanish)
 - ✅ Push bildirishnomalar
 - ✅ Offline rejim
 - ✅ Buyurtmalar tarixi
 - ✅ QR kod skanerlash
 - ✅ Xarita integratsiyasi
 - ✅ To'lov tizimlari
+- ✅ Ko'p tillilik (O'zbek, Rus, Ingliz)
 
 ## 📈 Statistika
 

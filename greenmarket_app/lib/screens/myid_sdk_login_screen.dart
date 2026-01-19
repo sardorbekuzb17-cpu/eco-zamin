@@ -6,6 +6,8 @@ import 'package:myid/enums.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../services/myid_backend_service.dart';
+import '../widgets/myid_error_dialog.dart';
+import '../l10n/app_localizations.dart';
 
 class MyIdSdkLoginScreen extends StatefulWidget {
   const MyIdSdkLoginScreen({super.key});
@@ -16,7 +18,6 @@ class MyIdSdkLoginScreen extends StatefulWidget {
 
 class _MyIdSdkLoginScreenState extends State<MyIdSdkLoginScreen> {
   bool _isLoading = false;
-  String? _errorMessage;
   String? _sessionId;
 
   @override
@@ -29,13 +30,9 @@ class _MyIdSdkLoginScreenState extends State<MyIdSdkLoginScreen> {
   Future<void> _createSession() async {
     setState(() {
       _isLoading = true;
-      _errorMessage = null;
     });
 
     try {
-      // Xavfsizlik tekshiruvi vaqtincha o'chirilgan - test uchun
-      // await SecurityService.checkSecurityBeforeMyId(context);
-
       final result = await MyIdBackendService.createEmptySession();
 
       if (result['success'] == true) {
@@ -47,20 +44,45 @@ class _MyIdSdkLoginScreenState extends State<MyIdSdkLoginScreen> {
             _isLoading = false;
           });
         } else {
+          // Session ID topilmadi xatosi
+          if (mounted) {
+            await MyIdErrorDialog.show(
+              context: context,
+              errorType: 'session_not_found',
+              onRetry: _createSession,
+              onCancel: () => Navigator.pop(context),
+            );
+          }
           setState(() {
-            _errorMessage = 'Session ID topilmadi';
             _isLoading = false;
           });
         }
       } else {
+        // Session yaratish xatosi
+        if (mounted) {
+          await MyIdErrorDialog.show(
+            context: context,
+            errorType: 'session',
+            customMessage: result['error'] as String?,
+            onRetry: _createSession,
+            onCancel: () => Navigator.pop(context),
+          );
+        }
         setState(() {
-          _errorMessage = result['error'] ?? 'Session yaratishda xato';
           _isLoading = false;
         });
       }
     } catch (e) {
+      // Tarmoq xatosi
+      if (mounted) {
+        await MyIdErrorDialog.show(
+          context: context,
+          errorType: 'network',
+          onRetry: _createSession,
+          onCancel: () => Navigator.pop(context),
+        );
+      }
       setState(() {
-        _errorMessage = 'Xatolik: ${e.toString()}';
         _isLoading = false;
       });
     }
@@ -69,15 +91,19 @@ class _MyIdSdkLoginScreenState extends State<MyIdSdkLoginScreen> {
   // 2. MyID SDK'ni ishga tushirish
   Future<void> _startMyIdSdk() async {
     if (_sessionId == null) {
-      setState(() {
-        _errorMessage = 'Session ID mavjud emas';
-      });
+      if (mounted) {
+        await MyIdErrorDialog.show(
+          context: context,
+          errorType: 'session_not_found',
+          onRetry: _createSession,
+          onCancel: () => Navigator.pop(context),
+        );
+      }
       return;
     }
 
     setState(() {
       _isLoading = true;
-      _errorMessage = null;
     });
 
     try {
@@ -116,8 +142,18 @@ class _MyIdSdkLoginScreenState extends State<MyIdSdkLoginScreen> {
       if (kDebugMode) {
         debugPrint('🔴 MyID SDK xatosi: $e');
       }
+
+      if (mounted) {
+        await MyIdErrorDialog.show(
+          context: context,
+          errorType: 'sdk_error',
+          customMessage: e.toString(),
+          onRetry: _startMyIdSdk,
+          onCancel: () => Navigator.pop(context),
+        );
+      }
+
       setState(() {
-        _errorMessage = 'MyID SDK xatosi: ${e.toString()}';
         _isLoading = false;
       });
     }
@@ -142,8 +178,17 @@ class _MyIdSdkLoginScreenState extends State<MyIdSdkLoginScreen> {
             '⚠️ MyID natija bo\'sh - foydalanuvchi bekor qilgan bo\'lishi mumkin',
           );
         }
+
+        if (mounted) {
+          await MyIdErrorDialog.show(
+            context: context,
+            errorType: 'cancelled',
+            onRetry: _startMyIdSdk,
+            onCancel: () => Navigator.pop(context),
+          );
+        }
+
         setState(() {
-          _errorMessage = 'MyID natija topilmadi. Qayta urinib ko\'ring.';
           _isLoading = false;
         });
         return;
@@ -181,8 +226,18 @@ class _MyIdSdkLoginScreenState extends State<MyIdSdkLoginScreen> {
       if (kDebugMode) {
         debugPrint('🔴 Ma\'lumotlarni saqlashda xato: $e');
       }
+
+      if (mounted) {
+        await MyIdErrorDialog.show(
+          context: context,
+          errorType: 'data_error',
+          customMessage: e.toString(),
+          onRetry: () => _handleMyIdResult(result),
+          onCancel: () => Navigator.pop(context),
+        );
+      }
+
       setState(() {
-        _errorMessage = 'Ma\'lumotlarni saqlashda xato: ${e.toString()}';
         _isLoading = false;
       });
     }
@@ -190,6 +245,8 @@ class _MyIdSdkLoginScreenState extends State<MyIdSdkLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAF9),
       appBar: AppBar(
@@ -199,9 +256,9 @@ class _MyIdSdkLoginScreenState extends State<MyIdSdkLoginScreen> {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A2E1A)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'MyID SDK',
-          style: TextStyle(
+        title: Text(
+          l10n.translate('myid_title'),
+          style: const TextStyle(
             color: Color(0xFF1A2E1A),
             fontWeight: FontWeight.bold,
           ),
@@ -213,10 +270,6 @@ class _MyIdSdkLoginScreenState extends State<MyIdSdkLoginScreen> {
   }
 
   Widget _buildBody() {
-    if (_errorMessage != null) {
-      return _buildErrorView();
-    }
-
     if (_isLoading) {
       return _buildLoadingView();
     }
@@ -229,6 +282,8 @@ class _MyIdSdkLoginScreenState extends State<MyIdSdkLoginScreen> {
   }
 
   Widget _buildLoadingView() {
+    final l10n = AppLocalizations.of(context)!;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -236,7 +291,7 @@ class _MyIdSdkLoginScreenState extends State<MyIdSdkLoginScreen> {
           const CircularProgressIndicator(color: Color(0xFF15803D)),
           const SizedBox(height: 24),
           Text(
-            'Session yaratilmoqda...',
+            l10n.translate('myid_creating_session'),
             style: TextStyle(fontSize: 16, color: Colors.grey[600]),
           ),
         ],
@@ -245,6 +300,8 @@ class _MyIdSdkLoginScreenState extends State<MyIdSdkLoginScreen> {
   }
 
   Widget _buildReadyView() {
+    final l10n = AppLocalizations.of(context)!;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -266,9 +323,9 @@ class _MyIdSdkLoginScreenState extends State<MyIdSdkLoginScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Session tayyor',
-              style: TextStyle(
+            Text(
+              l10n.translate('myid_session_ready'),
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF1A2E1A),
@@ -276,7 +333,7 @@ class _MyIdSdkLoginScreenState extends State<MyIdSdkLoginScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'MyID SDK orqali identifikatsiya qilish uchun tayyor',
+              l10n.translate('myid_session_ready_desc'),
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
@@ -316,9 +373,9 @@ class _MyIdSdkLoginScreenState extends State<MyIdSdkLoginScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Text(
-                      'MyID SDK ni boshlash',
-                      style: TextStyle(
+                    Text(
+                      l10n.translate('myid_sdk_button'),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -329,68 +386,8 @@ class _MyIdSdkLoginScreenState extends State<MyIdSdkLoginScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Session 10 daqiqa amal qiladi',
+              l10n.translate('myid_session_expiry'),
               style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildErrorView() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: Colors.red[50],
-                borderRadius: BorderRadius.circular(40),
-              ),
-              child: Icon(
-                Icons.error_outline,
-                size: 48,
-                color: Colors.red[700],
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Xatolik yuz berdi',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              _errorMessage ?? 'Noma\'lum xato',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _createSession,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF15803D),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Qayta urinish',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-              ),
             ),
           ],
         ),

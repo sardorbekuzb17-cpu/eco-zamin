@@ -98,7 +98,7 @@ QwIDAQAB
           sessionId: sessionIdString,
           clientHash: clientHash,
           clientHashId: clientHashId,
-          environment: MyIdEnvironment.PRODUCTION, // Production muhiti
+          environment: MyIdEnvironment.DEBUG, // DEV muhiti
           entryType: MyIdEntryType.IDENTIFICATION,
           locale: MyIdLocale.UZBEK,
         ),

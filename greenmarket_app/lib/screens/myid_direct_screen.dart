@@ -40,7 +40,7 @@ QwIDAQAB
         config: MyIdConfig(
           clientHash: clientHash,
           clientHashId: clientHashId,
-          environment: MyIdEnvironment.PRODUCTION,
+          environment: MyIdEnvironment.DEBUG,
           entryType: MyIdEntryType.IDENTIFICATION,
           locale: MyIdLocale.UZBEK,
         ),

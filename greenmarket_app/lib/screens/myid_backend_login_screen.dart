@@ -23,7 +23,7 @@ class _MyIdBackendLoginScreenState extends State<MyIdBackendLoginScreen> {
 
     try {
       // Backend orqali to'liq jarayon
-      final result = await MyIdBackendClient.completeAuthFlowWithBackend(
+      final result = await MyIdBackendClient.completeAuthFlow(
         onStatusUpdate: (status) {
           setState(() => _statusMessage = status);
         },

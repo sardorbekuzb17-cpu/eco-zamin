@@ -264,6 +264,22 @@ class _HomeScreenState extends State<HomeScreen> {
                           Navigator.pushNamed(context, '/admin-users');
                         },
                       ),
+                      _buildFeatureCard(
+                        icon: Icons.science,
+                        title: 'SDK Test',
+                        color: const Color(0xFF9b59b6),
+                        onTap: () {
+                          Navigator.pushNamed(context, '/simple-test');
+                        },
+                      ),
+                      _buildFeatureCard(
+                        icon: Icons.account_tree,
+                        title: 'Chizma bo\'yicha',
+                        color: const Color(0xFF16a085),
+                        onTap: () {
+                          Navigator.pushNamed(context, '/diagram-flow');
+                        },
+                      ),
                     ],
                   ),
                 ],

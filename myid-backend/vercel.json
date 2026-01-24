@@ -5,5 +5,19 @@
             "src": "api/*.js",
             "use": "@vercel/node"
         }
+    ],
+    "routes": [
+        {
+            "src": "/api/myid/access-token",
+            "dest": "/api/access-token.js"
+        },
+        {
+            "src": "/api/myid/session",
+            "dest": "/api/session.js"
+        },
+        {
+            "src": "/api/myid/user-data",
+            "dest": "/api/user-data.js"
+        }
     ]
 }

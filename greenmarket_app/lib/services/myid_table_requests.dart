@@ -40,7 +40,7 @@ class MyIdTableRequests {
 
       final response = await http
           .post(
-            Uri.parse('$_backendUrl/api/v1/access-token'),
+            Uri.parse('$_backendUrl/api/myid/access-token'),
             headers: {'Content-Type': 'application/json'},
             body: json.encode({
               'client_id': clientId,
@@ -105,7 +105,7 @@ class MyIdTableRequests {
 
       final response = await http
           .post(
-            Uri.parse('$_backendUrl/api/v1/session'),
+            Uri.parse('$_backendUrl/api/myid/session'),
             headers: {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer $accessToken',
@@ -263,7 +263,7 @@ class MyIdTableRequests {
 
       final response = await http
           .post(
-            Uri.parse('$_backendUrl/api/v1/user-data'),
+            Uri.parse('$_backendUrl/api/myid/user-data'),
             headers: {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer $accessToken',

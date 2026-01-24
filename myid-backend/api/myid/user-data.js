@@ -1,5 +1,7 @@
 const axios = require('axios');
 
+const MYID_HOST = process.env.MYID_HOST || 'https://api.devmyid.uz';
+
 module.exports = async (req, res) => {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
@@ -18,7 +20,7 @@ module.exports = async (req, res) => {
         console.log('📤 3-JADVAL: Foydalanuvchi ma\'lumotlari so\'rovi...');
 
         const response = await axios.post(
-            `${process.env.MYID_HOST}/api/v2/sdk/user-data`,
+            `${MYID_HOST}/api/v2/sdk/user-data`,
             { code },
             {
                 headers: {

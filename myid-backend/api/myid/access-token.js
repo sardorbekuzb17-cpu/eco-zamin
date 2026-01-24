@@ -1,5 +1,7 @@
 const axios = require('axios');
 
+const MYID_HOST = process.env.MYID_HOST || 'https://api.devmyid.uz';
+
 module.exports = async (req, res) => {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
@@ -18,7 +20,7 @@ module.exports = async (req, res) => {
         }
 
         const response = await axios.post(
-            `${process.env.MYID_HOST}/oauth/token`,
+            `${MYID_HOST}/oauth/token`,
             {
                 client_id,
                 client_secret,

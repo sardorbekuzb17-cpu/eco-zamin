@@ -22,7 +22,7 @@ console.log(`🌐 MyID Host: ${MYID_HOST}`);
 // ============================================
 // 1-JADVAL: ACCESS TOKEN OLISH
 // ============================================
-app.post('/api/v1/access-token', async (req, res) => {
+app.post('/api/myid/access-token', async (req, res) => {
     try {
         console.log('📤 1-JADVAL: Access token so\'rovi...');
 
@@ -68,7 +68,7 @@ app.post('/api/v1/access-token', async (req, res) => {
 // ============================================
 // 2-JADVAL: SESSION YARATISH
 // ============================================
-app.post('/api/v1/session', async (req, res) => {
+app.post('/api/myid/session', async (req, res) => {
     try {
         const { access_token } = req.body;
 
@@ -143,7 +143,7 @@ app.post('/api/v1/session', async (req, res) => {
 // ============================================
 // 3-JADVAL: FOYDALANUVCHI MA'LUMOTLARI
 // ============================================
-app.post('/api/v1/user-data', async (req, res) => {
+app.post('/api/myid/user-data', async (req, res) => {
     try {
         const { code, access_token } = req.body;
 

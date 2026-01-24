@@ -4,7 +4,7 @@
 
 MyID SDK Flutter ilovasida ishlatilmoqda. SDK ishga tushganda quyidagi xatolik yuz bermoqda:
 
-```
+```plaintext
 PlatformException(103, Session is expired, null, null)
 ```
 
@@ -17,7 +17,7 @@ PlatformException(103, Session is expired, null, null)
 
 ## Credentials Ma'lumotlari
 
-```
+```plaintext
 client_id: quyosh_24_sdk-OYD9rRoHYRjJkpQ2LQNV0EG6KSXtKruUMkOCdY1v
 client_secret: JRgNV6Av8DlocKJIAozwUrx4uCOU9mDLy5D9SKsEF6EvG2VlD7FU8nup5AYlU3biDfNwOEB0S54Sgup3CB3aJNJuk2wIkG3AIOlP
 client_hash_id: ac6d0f4a-5d5b-44e3-a865-9159a3146a8c
@@ -27,7 +27,8 @@ client_hash_id: ac6d0f4a-5d5b-44e3-a865-9159a3146a8c
 
 ## 1. Access Token Olish (Muvaffaqiyatsiz)
 
-### REQUEST:
+### So'rov
+
 ```http
 POST https://api.myid.uz/api/v1/auth/clients/access-token
 Content-Type: application/json
@@ -38,7 +39,8 @@ Content-Type: application/json
 }
 ```
 
-### RESPONSE:
+### Javob
+
 ```http
 HTTP/1.1 400 Bad Request
 Content-Type: application/json
@@ -54,7 +56,8 @@ Content-Type: application/json
 
 ## 2. Session Yaratish (Muvaffaqiyatsiz)
 
-### REQUEST:
+### So'rov (Session)
+
 ```http
 POST https://api.myid.uz/api/v2/sdk/sessions
 Content-Type: application/json
@@ -63,8 +66,9 @@ Authorization: Bearer [TOKEN_OLINMADI]
 {}
 ```
 
-### RESPONSE:
-```
+### Javob (Session)
+
+```plaintext
 Request yuborilmadi - access token olish muvaffaqiyatsiz bo'lgani uchun
 ```
 
@@ -74,7 +78,8 @@ Request yuborilmadi - access token olish muvaffaqiyatsiz bo'lgani uchun
 
 ## 3. MyID SDK Ishga Tushirish (Muvaffaqiyatsiz)
 
-### Flutter SDK Konfiguratsiyasi:
+### Flutter SDK Konfiguratsiyasi
+
 ```dart
 final result = await MyIdClient.start(
   config: MyIdConfig(
@@ -98,8 +103,9 @@ QwIDAQAB
 );
 ```
 
-### SDK Xatosi:
-```
+### SDK Xatosi
+
+```plaintext
 PlatformException(103, Session is expired, null, null)
 ```
 
@@ -109,20 +115,23 @@ PlatformException(103, Session is expired, null, null)
 
 ## Muammo Tahlili
 
-### 1. **Access Token Muammosi**
+### 1. Access Token Muammosi
+
 - `client_id` va `client_secret` MyID API tomonidan qabul qilinmayapti
 - Xato: `"Incorrect client_id or client_secret"`
 - Bu credentials noto'g'ri yoki muddati tugaganligini ko'rsatadi
 
-### 2. **Session ID Muammosi**
+### 2. Session ID Muammosi
+
 - UUID bilan yaratilgan session ID MyID SDK tomonidan qabul qilinmayapti
 - Xato kodi 103: "Session is expired"
 - MyID dokumentatsiyasiga ko'ra, session ID faqat MyID API orqali yaratilishi kerak
 
-### 3. **To'g'ri Oqim**
+### 3. To'g'ri Oqim
+
 MyID dokumentatsiyasiga ko'ra to'g'ri oqim:
 
-```
+```plaintext
 1. Access Token olish
    POST /api/v1/auth/clients/access-token
    → access_token
@@ -141,20 +150,20 @@ Bizning holatda 1-qadam muvaffaqiyatsiz bo'lgani uchun keyingi qadamlar ishlamay
 
 ---
 
-## So'rov
+## Savollar
 
 MyID xodimlariga quyidagi savollar:
 
-1. **Credentials tekshirish:**
+1. **Credentials tekshirish**
    - `client_id: quyosh_24_sdk-OYD9rRoHYRjJkpQ2LQNV0EG6KSXtKruUMkOCdY1v` - bu to'g'rimi?
    - `client_secret` muddati tugaganmi?
    - Credentials qaysi muhit uchun (PRODUCTION/DEBUG)?
 
-2. **API endpoint tekshirish:**
+2. **API endpoint tekshirish**
    - `https://api.myid.uz/api/v1/auth/clients/access-token` - bu to'g'ri endpoint'mi?
    - Boshqa endpoint ishlatish kerakmi?
 
-3. **Session yaratish:**
+3. **Session yaratish**
    - Session yaratish uchun qo'shimcha parametrlar kerakmi?
    - UUID bilan session yaratish mumkinmi yoki faqat API orqali yaratilishi kerakmi?
 

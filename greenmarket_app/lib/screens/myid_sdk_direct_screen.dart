@@ -34,13 +34,40 @@ class _MyIdSdkDirectScreenState extends State<MyIdSdkDirectScreen> {
 
     try {
       if (kDebugMode) {
-        debugPrint(
-          '🔵 [1/3] SDK to\'g\'ridan-to\'g\'ri ishga tushirilmoqda...',
-        );
+        debugPrint('🔵 [1/4] Session yaratilmoqda...');
       }
 
-      // SDK'ni sessionId siz ishga tushirish
+      // 1. Backend'dan session yaratish
+      final sessionResponse = await http.post(
+        Uri.parse(
+          'https://greenmarket-backend-lilac.vercel.app/api/myid/create-session',
+        ),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({}),
+      );
+
+      if (sessionResponse.statusCode != 200) {
+        throw Exception('Session yaratishda xato: ${sessionResponse.body}');
+      }
+
+      final sessionData = json.decode(sessionResponse.body);
+      final sessionId = sessionData['data']['session_id'];
+
+      if (kDebugMode) {
+        debugPrint('✅ [1/4] Session yaratildi: $sessionId');
+      }
+
+      setState(() {
+        _statusMessage = 'SDK ishga tushirilmoqda...';
+      });
+
+      if (kDebugMode) {
+        debugPrint('🔵 [2/4] SDK ishga tushirilmoqda (session ID bilan)...');
+      }
+
+      // 2. SDK'ni session ID bilan ishga tushirish
       final config = MyIdConfig(
+        sessionId: sessionId,
         clientHash: app_config.MyIDConfig.clientHash,
         clientHashId: app_config.MyIDConfig.clientHashId,
         environment: MyIdEnvironment.DEBUG,
@@ -54,7 +81,7 @@ class _MyIdSdkDirectScreenState extends State<MyIdSdkDirectScreen> {
       );
 
       if (kDebugMode) {
-        debugPrint('✅ [1/3] SDK natija:');
+        debugPrint('✅ [2/4] SDK natija:');
         debugPrint('   - code: ${result.code}');
         debugPrint('   - base64: ${result.base64?.length ?? 0} bytes');
       }
@@ -63,13 +90,13 @@ class _MyIdSdkDirectScreenState extends State<MyIdSdkDirectScreen> {
         throw Exception('SDK code null yoki bo\'sh');
       }
 
-      // Backend'ga profil ma'lumotlarini yuborish
+      // 3. Backend'ga profil ma'lumotlarini yuborish
       setState(() {
         _statusMessage = 'Backend\'ga ma\'lumotlar yuborilmoqda...';
       });
 
       if (kDebugMode) {
-        debugPrint('🔵 [2/3] Backend\'ga so\'rov yuborilmoqda...');
+        debugPrint('🔵 [3/4] Backend\'ga so\'rov yuborilmoqda...');
       }
 
       final response = await http.post(
@@ -87,18 +114,18 @@ class _MyIdSdkDirectScreenState extends State<MyIdSdkDirectScreen> {
       final backendData = json.decode(response.body);
 
       if (kDebugMode) {
-        debugPrint('✅ [2/3] Backend javob olindi');
+        debugPrint('✅ [3/4] Backend javob olindi');
         debugPrint('   - User ID: ${backendData['data']['user_id']}');
         debugPrint('   - PINFL: ${backendData['data']['pinfl']}');
       }
 
-      // Ma'lumotlarni saqlash
+      // 4. Ma'lumotlarni saqlash
       setState(() {
         _statusMessage = 'Ma\'lumotlar saqlanmoqda...';
       });
 
       if (kDebugMode) {
-        debugPrint('🔵 [3/3] Ma\'lumotlar saqlanmoqda...');
+        debugPrint('🔵 [4/4] Ma\'lumotlar saqlanmoqda...');
       }
 
       final userData = {
@@ -114,7 +141,7 @@ class _MyIdSdkDirectScreenState extends State<MyIdSdkDirectScreen> {
       await prefs.setString('user_data', json.encode(userData));
 
       if (kDebugMode) {
-        debugPrint('✅ [3/3] Muvaffaqiyatli yakunlandi!');
+        debugPrint('✅ [4/4] Muvaffaqiyatli yakunlandi!');
       }
 
       setState(() {

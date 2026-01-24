@@ -5,6 +5,8 @@ import 'package:myid/enums.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../services/myid_backend_service.dart';
+import '../services/myid_oauth_service.dart';
+import 'package:flutter/foundation.dart';
 import '../config/myid_config.dart' as app_config;
 
 class MyIdOAuthFullLoginScreen extends StatefulWidget {
@@ -60,6 +62,7 @@ QwIDAQAB
       }
 
       final sessionId = sessionResponse['session_id'] as String;
+      final accessToken = sessionResponse['access_token'] as String?;
 
       // 2. MyID SDK ni ishga tushirish
       setState(() => _statusMessage = 'MyID SDK ishga tushirilmoqda...');
@@ -69,32 +72,62 @@ QwIDAQAB
           sessionId: sessionId,
           clientHash: clientHash,
           clientHashId: app_config.MyIDConfig.clientHashId,
-          environment: MyIdEnvironment.DEBUG,
+          environment: kReleaseMode
+              ? MyIdEnvironment.PRODUCTION
+              : MyIdEnvironment.DEBUG,
           entryType: MyIdEntryType.IDENTIFICATION,
           locale: MyIdLocale.UZBEK,
         ),
         iosAppearance: const MyIdIOSAppearance(),
       );
 
-      // 3. Natijani tekshirish
-      if (result.code == '0') {
-        final userData = {
-          'myid_code': result.code,
-          'session_id': sessionId,
-          'timestamp': DateTime.now().toIso8601String(),
-          'verified': true,
-        };
-
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('user_data', json.encode(userData));
-
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/home');
-        }
-      } else {
+      // 3. Natijani tekshirish + profilni olish
+      if (result.code != '0') {
         setState(() {
           _errorMessage = 'MyID xatosi: ${result.code}';
         });
+        return;
+      }
+
+      if (accessToken == null || accessToken.isEmpty) {
+        throw Exception('Access token topilmadi (sessionResponse ichida)');
+      }
+
+      setState(
+        () => _statusMessage = 'Foydalanuvchi ma\'lumotlari olinmoqda...',
+      );
+      final profileResult = await MyIdOAuthService.getUserProfile(
+        accessToken: accessToken,
+        sessionId: sessionId,
+      );
+
+      if (profileResult['success'] != true) {
+        throw Exception(profileResult['error'] ?? 'Profilni olishda xatolik');
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'myid_profile',
+        json.encode(profileResult['profile']),
+      );
+      await prefs.setString('myid_access_token', accessToken);
+      await prefs.setString('myid_session_id', sessionId);
+
+      final userData = {
+        'session_id': sessionId,
+        'profile': profileResult['profile'],
+        'data': profileResult['data'],
+        'comparison_value': profileResult['comparison_value'],
+        'pers_data': profileResult['pers_data'],
+        'pin_id': profileResult['pin_id'],
+        'timestamp': DateTime.now().toIso8601String(),
+        'verified': true,
+        'auth_method': 'oauth_full',
+      };
+      await prefs.setString('user_data', json.encode(userData));
+
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
       }
     } catch (e) {
       setState(() {

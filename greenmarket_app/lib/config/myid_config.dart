@@ -1,8 +1,8 @@
 class MyIDConfig {
-  // Asosiy URL - PRODUCTION
-  static const String baseUrl = 'https://api.myid.uz';
+  // DEV muhiti - api.devmyid.uz
+  static const String baseUrl = 'https://api.devmyid.uz';
 
-  // Sizning ma'lumotlaringiz
+  // Sizning ma'lumotlaringiz (DEV uchun)
   static const String clientId =
       'quyosh_24_sdk-OYD9rRoHYRjJkpQ2LQNV0EG6KSXtKruUMkOCdY1v';
   static const String clientSecret =

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:myid/myid.dart';
 import 'package:myid/myid_config.dart';
@@ -122,12 +123,16 @@ QwIDAQAB
     bool forcePassportScreen = false,
   }) async {
     try {
+      final env = kReleaseMode
+          ? MyIdEnvironment.PRODUCTION
+          : MyIdEnvironment.DEBUG;
+
       final result = await MyIdClient.start(
         config: MyIdConfig(
           sessionId: sessionId,
           clientHash: _clientHash,
           clientHashId: app_config.MyIDConfig.clientHashId,
-          environment: MyIdEnvironment.DEBUG,
+          environment: env,
           entryType: MyIdEntryType.IDENTIFICATION,
           locale: MyIdLocale.UZBEK,
           // MUHIM: residency = USER_DEFINED bo'lsa, SDK pasport ekranini ko'rsatadi

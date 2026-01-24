@@ -267,6 +267,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisSpacing: 16,
                     children: [
                       _buildFeatureCard(
+                        icon: Icons.login,
+                        title: 'MyID',
+                        color: const Color(0xFF15803D),
+                        onTap: () {
+                          Navigator.pushNamed(context, '/complete-test');
+                        },
+                      ),
+                      _buildFeatureCard(
                         icon: Icons.badge,
                         title: 'Pasport Input',
                         color: const Color(0xFFe74c3c),

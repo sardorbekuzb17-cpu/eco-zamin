@@ -1,21 +1,18 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'package:myid/myid.dart';
-import 'package:myid/myid_config.dart';
-import 'package:myid/enums.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:uuid/uuid.dart';
 import 'dart:convert';
 
-/// MyID SDK Flow ekrani
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../services/myid_oauth_service.dart';
+
+/// MyID SDK Flow ekrani (ilova ichida)
 ///
-/// Bu ekran to'liq MyID autentifikatsiya jarayonini boshqaradi:
-/// 1. Sessiya yaratish (1/4)
-/// 2. SDK ishga tushirish (2/4)
-/// 3. Yuz tanish (3/4)
-/// 4. Ma'lumotlarni saqlash (4/4)
-///
-/// Requirements: 8.2, 8.3
+/// To'liq oqim:
+/// 1) Access token olish
+/// 2) Session yaratish
+/// 3) MyID SDK (pasport + face)
+/// 4) Profil ma'lumotlarini olish va saqlash
 class MyIdSdkFlowScreen extends StatefulWidget {
   const MyIdSdkFlowScreen({super.key});
 
@@ -24,12 +21,10 @@ class MyIdSdkFlowScreen extends StatefulWidget {
 }
 
 class _MyIdSdkFlowScreenState extends State<MyIdSdkFlowScreen> {
-  // Jarayon holati
   int _currentStep = 1; // 1-4
-  bool _isLoading = false;
+  bool _isLoading = true;
   String? _errorMessage;
-  String? _sessionId;
-  String _statusMessage = 'Sessiya yaratilmoqda...';
+  String _statusMessage = 'Jarayon boshlanmoqda...';
 
   @override
   void initState() {
@@ -37,243 +32,88 @@ class _MyIdSdkFlowScreenState extends State<MyIdSdkFlowScreen> {
     _startFlow();
   }
 
-  /// To'liq oqimni boshlash
-  Future<void> _startFlow() async {
-    await _createSession();
+  int _stepFromStatus(String status) {
+    final s = status.toLowerCase();
+    if (s.contains('access token')) return 1;
+    if (s.contains('sessiya') || s.contains('session')) return 2;
+    if (s.contains('sdk')) return 3;
+    if (s.contains("foydalanuvchi") ||
+        s.contains("profil") ||
+        s.contains("ma'lumot")) {
+      return 4;
+    }
+    return _currentStep;
   }
 
-  /// Bosqich 1: Sessiya yaratish (1/4) - UUID bilan
-  Future<void> _createSession() async {
+  Future<void> _startFlow() async {
     setState(() {
-      _currentStep = 1;
       _isLoading = true;
       _errorMessage = null;
-      _statusMessage = 'Sessiya yaratilmoqda...';
+      _currentStep = 1;
+      _statusMessage = 'Access token olinmoqda...';
     });
 
     try {
-      if (kDebugMode) {
-        debugPrint('🔵 [1/4] Sessiya yaratish boshlandi (UUID bilan)');
-      }
-
-      // UUID formatida sessionId yaratish
-      const uuid = Uuid();
-      final sessionId = uuid.v4();
-
-      setState(() {
-        _sessionId = sessionId;
-      });
-
-      if (kDebugMode) {
-        debugPrint('✅ [1/4] Sessiya yaratildi: $sessionId');
-      }
-
-      // Keyingi bosqichga o'tish
-      await Future.delayed(const Duration(milliseconds: 500));
-      await _startMyIdSdk();
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('🔴 [1/4] Sessiya yaratishda xato: $e');
-      }
-      setState(() {
-        _errorMessage = 'Sessiya yaratishda xato: ${e.toString()}';
-        _isLoading = false;
-      });
-    }
-  }
-
-  /// Bosqich 2: SDK ishga tushirish (2/4)
-  Future<void> _startMyIdSdk() async {
-    if (_sessionId == null) {
-      setState(() {
-        _errorMessage = 'Session ID mavjud emas';
-        _isLoading = false;
-      });
-      return;
-    }
-
-    setState(() {
-      _currentStep = 2;
-      _statusMessage = 'MyID SDK ishga tushirilmoqda...';
-    });
-
-    try {
-      if (kDebugMode) {
-        debugPrint('🔵 [2/4] MyID SDK ishga tushirish boshlandi');
-        debugPrint('   Session ID: $_sessionId');
-      }
-
-      // Bosqich 3: Yuz tanish (3/4)
-      setState(() {
-        _currentStep = 3;
-        _statusMessage = 'Yuz tanish jarayoni...';
-      });
-
-      // Saqlangan tilni yuklash
-      final prefs = await SharedPreferences.getInstance();
-      final savedLanguage = prefs.getString('language') ?? 'uz';
-
-      // Tilga mos MyIdLocale tanlash
-      MyIdLocale locale;
-      switch (savedLanguage) {
-        case 'ru':
-          locale = MyIdLocale.RUSSIAN;
-          break;
-        case 'en':
-          locale = MyIdLocale.ENGLISH;
-          break;
-        default:
-          locale = MyIdLocale.UZBEK;
-      }
-
-      if (kDebugMode) {
-        debugPrint('   Tanlangan til: $savedLanguage -> $locale');
-      }
-
-      // MyID SDK'ni ishga tushirish
-      final result = await MyIdClient.start(
-        config: MyIdConfig(
-          sessionId: _sessionId!,
-          clientHash: '''-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5wQYaS8i1b0Rj5wuJLhI
-yDuTW/WoWB/kRbJCBHFLyFTxETADNa/CU+xw0moN9X10+MVD5kRMinMRQpGUVCrU
-XjUAEjwbdaCSLR6suRYI1EfDMQ5XFdJsfkAlNzZyyfBlif4OA4qxaMtdyvJCa/8n
-wHn2KC89BNhqBQMre7iLaW8Z9bArSulSxBJzbzPjd7Jkg4ccQ47bVyjEKBcu/1KX
-Ud/audUr1WsUpBf9yvgSTDRG2cuVXpMGEBJAqrsCS3RtIt7pEnGtr5FsB+UmBec9
-Ei97fK2LcVfWpc/m7WjWMz3mku/pmhSjC6Vl6dlOrP1dv/fJkhfh3axzXtZoxgV1
-QwIDAQAB
------END PUBLIC KEY-----''',
-          clientHashId: 'ac6d0f4a-5d5b-44e3-a865-9159a3146a8c',
-          environment: MyIdEnvironment.DEBUG, // DEV muhiti
-          entryType: MyIdEntryType.IDENTIFICATION,
-          residency: MyIdResidency.USER_DEFINED,
-          locale: locale, // Foydalanuvchi tanlagan til
-        ),
-        iosAppearance: const MyIdIOSAppearance(),
+      final result = await MyIdOAuthService.completeAuthFlow(
+        onStatusUpdate: (status) {
+          if (!mounted) return;
+          setState(() {
+            _statusMessage = status;
+            _currentStep = _stepFromStatus(status);
+          });
+        },
       );
 
-      if (kDebugMode) {
-        debugPrint('✅ [3/4] MyID SDK natija olindi');
-        debugPrint('   Code (PINFL): ${result.code}');
+      if (result['success'] == true) {
+        final prefs = await SharedPreferences.getInstance();
+
+        // To'liq profil ma'lumotlarini saqlash
+        await prefs.setString('myid_profile', json.encode(result['profile']));
+        await prefs.setString('myid_access_token', result['access_token']);
+        await prefs.setString('myid_session_id', result['session_id']);
+
+        final userData = {
+          'session_id': result['session_id'],
+          'profile': result['profile'],
+          'data': result['data'],
+          'comparison_value': result['comparison_value'],
+          'pers_data': result['pers_data'],
+          'pin_id': result['pin_id'],
+          'timestamp': DateTime.now().toIso8601String(),
+          'verified': true,
+          'auth_method': 'sdk_flow',
+        };
+        await prefs.setString('user_data', json.encode(userData));
+
+        setState(() {
+          _isLoading = false;
+          _currentStep = 4;
+          _statusMessage = 'Muvaffaqiyatli!';
+        });
+
+        await Future.delayed(const Duration(milliseconds: 800));
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/home');
+        }
+        return;
       }
 
-      // Natijani qayta ishlash
-      await _handleMyIdResult(result);
+      setState(() {
+        _errorMessage = result['error'] ?? 'Noma\'lum xatolik';
+        _isLoading = false;
+      });
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('🔴 [2/4] MyID SDK xatosi: $e');
+        debugPrint('MyID flow error: $e');
       }
       setState(() {
-        _errorMessage = 'MyID SDK xatosi: ${e.toString()}';
+        _errorMessage = 'Xatolik: ${e.toString()}';
         _isLoading = false;
       });
     }
   }
 
-  /// Bosqich 4: MyID natijasini qayta ishlash va saqlash (4/4)
-  ///
-  /// SDK natijalarini qayta ishlash:
-  /// - code="0": Muvaffaqiyatli (PINFL olindi)
-  /// - code="1": Bekor qilindi
-  /// - code="2" yoki "3": Xato
-  ///
-  /// Requirements: 3.6, 3.7, 3.8
-  Future<void> _handleMyIdResult(MyIdResult result) async {
-    setState(() {
-      _currentStep = 4;
-      _statusMessage = 'Ma\'lumotlar saqlanmoqda...';
-    });
-
-    try {
-      if (kDebugMode) {
-        debugPrint('🔵 [4/4] MyID natijasini qayta ishlash');
-        debugPrint('   result.code: ${result.code}');
-        debugPrint(
-          '   result.base64: ${result.base64 != null ? "Mavjud" : "Yo'q"}',
-        );
-      }
-
-      // MyID SDK code'larini tekshirish
-      // Eslatma: MyID SDK Flutter versiyasida code PINFL ni qaytaradi
-      // Lekin biz xato holatlarini ham tekshirishimiz kerak
-
-      // Xato - code null yoki bo'sh (foydalanuvchi bekor qilgan - code="1")
-      if (result.code == null || result.code!.isEmpty) {
-        if (kDebugMode) {
-          debugPrint('⚠️ [4/4] Foydalanuvchi jarayonni bekor qildi (code="1")');
-        }
-        setState(() {
-          _errorMessage = 'Jarayon bekor qilindi. Qayta urinib ko\'ring.';
-          _isLoading = false;
-        });
-        return;
-      }
-
-      // Xato - code "2" yoki "3" (SDK xatosi)
-      if (result.code == '2' || result.code == '3') {
-        if (kDebugMode) {
-          debugPrint('🔴 [4/4] SDK xatosi (code="${result.code}")');
-        }
-        setState(() {
-          _errorMessage = 'Identifikatsiya xatosi. Qayta urinib ko\'ring.';
-          _isLoading = false;
-        });
-        return;
-      }
-
-      // Muvaffaqiyatli - code="0" yoki PINFL (14 raqam)
-      if (kDebugMode) {
-        debugPrint('✅ [4/4] Muvaffaqiyatli - PINFL olindi: ${result.code}');
-      }
-
-      // Muvaffaqiyatli natija - PINFL (code) olindi
-      final userData = {
-        'pinfl': result.code!,
-        'full_name': 'MyID User',
-        'verified': true,
-        'timestamp': DateTime.now().toIso8601String(),
-        'myid_code': result.code,
-        'has_photo': result.base64 != null,
-      };
-
-      // SharedPreferences'ga saqlash
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_data', json.encode(userData));
-
-      if (kDebugMode) {
-        debugPrint('✅ [4/4] Foydalanuvchi ma\'lumotlari saqlandi');
-      }
-
-      // Muvaffaqiyat xabarini ko'rsatish
-      setState(() {
-        _isLoading = false;
-        _statusMessage = 'Muvaffaqiyatli!';
-      });
-
-      // 2 soniya kutish va home ekraniga o'tish
-      await Future.delayed(const Duration(seconds: 2));
-
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('🔴 [4/4] Ma\'lumotlarni saqlashda xato: $e');
-      }
-      setState(() {
-        _errorMessage = 'Ma\'lumotlarni saqlashda xato: ${e.toString()}';
-        _isLoading = false;
-      });
-    }
-  }
-
-  /// Qayta urinish
   void _retry() {
-    setState(() {
-      _currentStep = 1;
-      _errorMessage = null;
-      _sessionId = null;
-    });
     _startFlow();
   }
 
@@ -308,14 +148,9 @@ QwIDAQAB
       return _buildErrorView();
     }
 
-    if (_isLoading || _currentStep <= 4) {
-      return _buildProgressView();
-    }
-
-    return const Center(child: Text('Kutilmagan holat'));
+    return _buildProgressView();
   }
 
-  /// Jarayon ko'rinishi (loading + bosqichlar)
   Widget _buildProgressView() {
     return Center(
       child: Padding(
@@ -323,7 +158,6 @@ QwIDAQAB
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // MyID logo
             Container(
               width: 100,
               height: 100,
@@ -353,8 +187,6 @@ QwIDAQAB
               ),
             ),
             const SizedBox(height: 32),
-
-            // Bosqich ko'rsatkichi
             Text(
               'Bosqich $_currentStep/4',
               style: const TextStyle(
@@ -364,16 +196,12 @@ QwIDAQAB
               ),
             ),
             const SizedBox(height: 12),
-
-            // Holat xabari
             Text(
               _statusMessage,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
             const SizedBox(height: 32),
-
-            // Progress bar
             SizedBox(
               width: double.infinity,
               child: LinearProgressIndicator(
@@ -386,14 +214,9 @@ QwIDAQAB
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
-            const SizedBox(height: 32),
-
-            // Bosqichlar ro'yxati
+            const SizedBox(height: 24),
             _buildStepsList(),
-
-            const SizedBox(height: 32),
-
-            // Loading indikator
+            const SizedBox(height: 24),
             if (_isLoading)
               const CircularProgressIndicator(color: Color(0xFF0066cc)),
           ],
@@ -402,13 +225,12 @@ QwIDAQAB
     );
   }
 
-  /// Bosqichlar ro'yxati
   Widget _buildStepsList() {
     final steps = [
-      {'number': 1, 'title': 'Sessiya yaratish'},
-      {'number': 2, 'title': 'SDK ishga tushirish'},
-      {'number': 3, 'title': 'Yuz tanish'},
-      {'number': 4, 'title': 'Ma\'lumotlarni saqlash'},
+      {'number': 1, 'title': 'Access token olish'},
+      {'number': 2, 'title': 'Sessiya yaratish'},
+      {'number': 3, 'title': 'MyID SDK (pasport + yuz tanish)'},
+      {'number': 4, 'title': 'Profilni olish va saqlash'},
     ];
 
     return Column(
@@ -422,7 +244,6 @@ QwIDAQAB
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Row(
             children: [
-              // Step icon
               Container(
                 width: 32,
                 height: 32,
@@ -448,8 +269,6 @@ QwIDAQAB
                 ),
               ),
               const SizedBox(width: 12),
-
-              // Step title
               Expanded(
                 child: Text(
                   stepTitle,
@@ -469,7 +288,6 @@ QwIDAQAB
     );
   }
 
-  /// Xato ko'rinishi
   Widget _buildErrorView() {
     return Center(
       child: Padding(
@@ -477,7 +295,6 @@ QwIDAQAB
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Error icon
             Container(
               width: 80,
               height: 80,
@@ -492,8 +309,6 @@ QwIDAQAB
               ),
             ),
             const SizedBox(height: 24),
-
-            // Error title
             Text(
               'Xatolik yuz berdi',
               style: TextStyle(
@@ -503,16 +318,12 @@ QwIDAQAB
               ),
             ),
             const SizedBox(height: 12),
-
-            // Error message
             Text(
               _errorMessage ?? 'Noma\'lum xato',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             const SizedBox(height: 32),
-
-            // Retry button
             SizedBox(
               width: double.infinity,
               height: 56,
@@ -533,8 +344,6 @@ QwIDAQAB
               ),
             ),
             const SizedBox(height: 16),
-
-            // Back button
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text(

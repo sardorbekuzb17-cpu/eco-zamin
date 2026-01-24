@@ -37,6 +37,7 @@ import 'screens/myid_empty_session_simple_screen.dart';
 import 'screens/myid_sdk_direct_screen.dart';
 import 'screens/myid_complete_flow_screen.dart';
 import 'screens/myid_passport_session_screen.dart';
+import 'screens/myid_complete_test_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -99,6 +100,48 @@ class _GreenMarketAppState extends State<GreenMarketApp> {
   void initState() {
     super.initState();
     _loadSavedLocale();
+    _setupDeepLinkListener();
+  }
+
+  // Deep Link listener
+  void _setupDeepLinkListener() {
+    // Android deep link handling
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      const platform = MethodChannel(
+        'com.greenmarket.greenmarket_app/deeplink',
+      );
+      platform.setMethodCallHandler((call) async {
+        if (call.method == 'handleDeepLink') {
+          final uri = Uri.parse(call.arguments);
+          _handleDeepLink(uri);
+        }
+        return null;
+      });
+    }
+  }
+
+  // Deep Link'ni qayta ishlash
+  void _handleDeepLink(Uri uri) {
+    if (kDebugMode) {
+      debugPrint('🔗 Deep Link olindi: $uri');
+    }
+
+    // greenmarket://callback?code=ABC123&session_id=XYZ789
+    if (uri.scheme == 'greenmarket' && uri.host == 'callback') {
+      final code = uri.queryParameters['code'];
+      final sessionId = uri.queryParameters['session_id'];
+
+      if (kDebugMode) {
+        debugPrint('   - Code: $code');
+        debugPrint('   - Session ID: $sessionId');
+      }
+
+      // Kerakli ekranga o'tish
+      // Masalan, home ekraniga o'tish
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    }
   }
 
   // Saqlangan tilni yuklash
@@ -169,6 +212,7 @@ class _GreenMarketAppState extends State<GreenMarketApp> {
         '/admin-users': (context) => const AdminUsersScreen(),
         '/simple-test': (context) => const MyIdSimpleTestScreen(),
         '/diagram-flow': (context) => const MyIdDiagramFlowScreen(),
+        '/complete-test': (context) => const MyIdCompleteTestScreen(),
       },
     );
   }

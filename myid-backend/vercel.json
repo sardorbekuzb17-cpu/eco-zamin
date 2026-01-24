@@ -1,31 +1,3 @@
 {
-    "version": 2,
-    "builds": [
-        {
-            "src": "api/access-token.js",
-            "use": "@vercel/node"
-        },
-        {
-            "src": "api/session.js",
-            "use": "@vercel/node"
-        },
-        {
-            "src": "api/user-data.js",
-            "use": "@vercel/node"
-        }
-    ],
-    "routes": [
-        {
-            "src": "/api/myid/access-token",
-            "dest": "/api/access-token.js"
-        },
-        {
-            "src": "/api/myid/session",
-            "dest": "/api/session.js"
-        },
-        {
-            "src": "/api/myid/user-data",
-            "dest": "/api/user-data.js"
-        }
-    ]
+    "version": 2
 }

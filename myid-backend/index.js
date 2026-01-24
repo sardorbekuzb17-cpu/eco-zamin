@@ -236,5 +236,12 @@ app.get('/health', (req, res) => {
     });
 });
 
-
+// Vercel serverless environment uchun
 module.exports = app;
+
+// Local development uchun
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server ${PORT} portda ishlamoqda`);
+    });
+}

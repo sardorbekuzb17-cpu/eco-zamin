@@ -6,18 +6,18 @@
             "use": "@vercel/node"
         }
     ],
-    "routes": [
+    "rewrites": [
         {
-            "src": "/api/myid/access-token",
-            "dest": "/api/access-token.js"
+            "source": "/api/myid/access-token",
+            "destination": "/api/access-token.js"
         },
         {
-            "src": "/api/myid/session",
-            "dest": "/api/session.js"
+            "source": "/api/myid/session",
+            "destination": "/api/session.js"
         },
         {
-            "src": "/api/myid/user-data",
-            "dest": "/api/user-data.js"
+            "source": "/api/myid/user-data",
+            "destination": "/api/user-data.js"
         }
     ]
 }

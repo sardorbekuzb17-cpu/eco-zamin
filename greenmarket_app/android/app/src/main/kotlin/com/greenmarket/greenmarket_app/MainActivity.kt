@@ -14,6 +14,10 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
+        // MyID Platform Channel
+        val myIdChannel = MyIdPlatformChannel(this)
+        myIdChannel.setupChannel(flutterEngine)
+
         // Deep link channel
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
             .setMethodCallHandler { call, result ->

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/myid_oauth_service.dart';
 
-/// MyID Kirish Ekrani
+/// MyID Kirish Ekrani - Passport ma'lumotlari bilan
 class MyIdCompleteTestScreen extends StatefulWidget {
   const MyIdCompleteTestScreen({super.key});
 
@@ -15,7 +15,31 @@ class _MyIdCompleteTestScreenState extends State<MyIdCompleteTestScreen> {
   String? _errorMessage;
   Map<String, dynamic>? _userData;
 
+  // Passport ma'lumotlari
+  final _passportSeriesController = TextEditingController();
+  final _passportNumberController = TextEditingController();
+  final _birthDateController = TextEditingController();
+
+  @override
+  void dispose() {
+    _passportSeriesController.dispose();
+    _passportNumberController.dispose();
+    _birthDateController.dispose();
+    super.dispose();
+  }
+
   Future<void> _startMyIdFlow() async {
+    final passportSeries = _passportSeriesController.text.trim();
+    final passportNumber = _passportNumberController.text.trim();
+    final birthDate = _birthDateController.text.trim();
+
+    if (passportSeries.isEmpty || passportNumber.isEmpty || birthDate.isEmpty) {
+      setState(() {
+        _errorMessage = 'Barcha maydonlarni to\'ldiring';
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -26,14 +50,17 @@ class _MyIdCompleteTestScreenState extends State<MyIdCompleteTestScreen> {
     try {
       final result =
           await MyIdOAuthService.completeAuthFlow(
+            passportSeries: passportSeries,
+            passportNumber: passportNumber,
+            birthDate: birthDate,
             onStatusUpdate: (status) {
               setState(() => _statusMessage = status);
             },
           ).timeout(
-            const Duration(seconds: 30),
+            const Duration(seconds: 60),
             onTimeout: () => {
               'success': false,
-              'error': 'Timeout: Session yaratilmoqda ko\'p vaqt oldi',
+              'error': 'Timeout: Jarayon ko\'p vaqt oldi',
             },
           );
 
@@ -78,7 +105,7 @@ class _MyIdCompleteTestScreenState extends State<MyIdCompleteTestScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '❌ Xato:',
+                          'Xato:',
                           style: TextStyle(
                             color: Colors.red[700],
                             fontSize: 14,
@@ -99,7 +126,6 @@ class _MyIdCompleteTestScreenState extends State<MyIdCompleteTestScreen> {
                     ),
                   ),
                 ),
-
               if (_statusMessage != null && _isLoading)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 24),
@@ -111,7 +137,6 @@ class _MyIdCompleteTestScreenState extends State<MyIdCompleteTestScreen> {
                     ),
                   ),
                 ),
-
               if (_userData != null)
                 Container(
                   width: double.infinity,
@@ -122,7 +147,7 @@ class _MyIdCompleteTestScreenState extends State<MyIdCompleteTestScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '✅ Muvaffaqiyatli kirish!',
+                        'Muvaffaqiyatli kirish!',
                         style: TextStyle(
                           color: Colors.green[700],
                           fontSize: 16,
@@ -143,13 +168,46 @@ class _MyIdCompleteTestScreenState extends State<MyIdCompleteTestScreen> {
                     ],
                   ),
                 ),
-
+              if (!_isLoading) ...[
+                TextField(
+                  controller: _passportSeriesController,
+                  decoration: InputDecoration(
+                    labelText: 'Pasport seriyasi',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    prefixIcon: const Icon(Icons.credit_card),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _passportNumberController,
+                  decoration: InputDecoration(
+                    labelText: 'Pasport raqami',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    prefixIcon: const Icon(Icons.numbers),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _birthDateController,
+                  decoration: InputDecoration(
+                    labelText: 'Tug\'ilgan sana (YYYY-MM-DD)',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    prefixIcon: const Icon(Icons.calendar_today),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
               if (_isLoading)
                 const Padding(
                   padding: EdgeInsets.only(bottom: 32),
                   child: CircularProgressIndicator(color: Color(0xFF15803D)),
                 ),
-
               SizedBox(
                 width: double.infinity,
                 height: 56,

@@ -35,8 +35,8 @@ android {
         applicationId = "com.greenmarket.greenmarket_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        minSdk = flutter.minSdkVersion  // MyID SDK uchun minimum 21 kerak
+        targetSdk = 36  // 2026-yilgi talab
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -70,4 +70,7 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    
+    // MyID SDK
+    implementation("uz.myid.sdk.capture:myid-capture-sdk:3.1.5")
 }

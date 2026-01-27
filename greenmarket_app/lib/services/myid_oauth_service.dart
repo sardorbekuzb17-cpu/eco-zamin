@@ -1,10 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:myid/myid.dart';
-import 'package:myid/myid_config.dart';
-import 'package:myid/enums.dart';
 import '../config/myid_config.dart' as app_config;
+import 'myid_native_service.dart';
 
 /// MyID OAuth to'liq integratsiya servisi
 class MyIdOAuthService {
@@ -80,54 +78,44 @@ class MyIdOAuthService {
     }
   }
 
-  /// 2. Identify User - MyID SDK orqali foydalanuvchini identifikatsiya qilish
+  /// 2. Identify User - Native MyID SDK orqali foydalanuvchini identifikatsiya qilish
   static Future<Map<String, dynamic>> identifyUser({
     required String sessionId,
     required String clientHash,
+    required String clientHashId,
+    required String passportSeries,
+    required String passportNumber,
+    required String birthDate,
     bool forcePassportScreen = false,
   }) async {
     try {
-      debugPrint('🔵 IDENTIFY USER: SDK ishga tushirilmoqda...');
+      debugPrint('🔵 IDENTIFY USER: Native SDK orqali identifikatsiya...');
       debugPrint('   Session ID: $sessionId');
-      debugPrint('   Client Hash: ${clientHash.substring(0, 20)}...');
+      debugPrint('   Passport: $passportSeries/$passportNumber');
 
-      final env = kReleaseMode
-          ? MyIdEnvironment.PRODUCTION
-          : MyIdEnvironment.DEBUG;
-
-      debugPrint('   Environment: ${env.toString()}');
-
-      final result = await MyIdClient.start(
-        config: MyIdConfig(
-          sessionId: sessionId,
-          clientHash: clientHash,
-          clientHashId: app_config.MyIDConfig.clientHashId,
-          environment: env,
-          entryType: MyIdEntryType.IDENTIFICATION,
-          locale: MyIdLocale.UZBEK,
-          residency: forcePassportScreen
-              ? MyIdResidency.USER_DEFINED
-              : MyIdResidency.RESIDENT,
-          huaweiAppId: '',
-        ),
-        iosAppearance: const MyIdIOSAppearance(),
+      // Native SDK'ni chaqirish
+      final result = await MyIdNativeService.startMyIdSDK(
+        clientHash: clientHash,
+        clientHashId: clientHashId,
+        passportSeries: passportSeries,
+        passportNumber: passportNumber,
+        birthDate: birthDate,
+        sessionId: sessionId,
       );
 
-      debugPrint('✅ IDENTIFY USER: SDK natijasi olindi');
-      debugPrint('   Code: ${result.code}');
-      debugPrint('   Base64 Image: ${result.base64?.substring(0, 50)}...');
-
-      if (result.code != null && result.code!.isNotEmpty) {
-        return {
-          'success': true,
-          'code': result.code,
-          'base64_image': result.base64,
-          'result': result,
-        };
-      } else {
-        debugPrint('❌ IDENTIFY USER: Code qaytarilmadi');
-        return {'success': false, 'error': 'MyID SDK: Code qaytarilmadi'};
+      if (result['success'] != true) {
+        debugPrint('❌ IDENTIFY USER: SDK xatosi - ${result['error']}');
+        return {'success': false, 'error': result['error'] ?? 'SDK xatosi'};
       }
+
+      debugPrint('✅ IDENTIFY USER: Identifikatsiya muvaffaqiyatli');
+      debugPrint('   Code: ${result['code']?.toString().substring(0, 20)}...');
+
+      return {
+        'success': true,
+        'code': result['code'],
+        'base64_image': result['base64_image'],
+      };
     } catch (e) {
       debugPrint('❌ IDENTIFY USER XATOSI: $e');
       return {'success': false, 'error': 'SDK xatosi: $e'};
@@ -212,6 +200,8 @@ class MyIdOAuthService {
     bool? isResident,
     String? passData,
     String? pinfl,
+    String? passportSeries,
+    String? passportNumber,
     double? threshold,
     Function(String)? onStatusUpdate,
   }) async {
@@ -242,22 +232,23 @@ class MyIdOAuthService {
 
       // 2. MyID SDK orqali identifikatsiya
       onStatusUpdate?.call('MyID SDK ishga tushirilmoqda...');
-      final isEmptySession =
-          (phoneNumber == null || phoneNumber.isEmpty) &&
-          (birthDate == null || birthDate.isEmpty) &&
-          (passData == null || passData.isEmpty);
 
       final identifyResult = await identifyUser(
         sessionId: sessionId,
         clientHash: clientHash,
-        forcePassportScreen: isEmptySession,
+        clientHashId: app_config.MyIDConfig.clientHashId,
+        passportSeries: passportSeries ?? '',
+        passportNumber: passportNumber ?? '',
+        birthDate: birthDate ?? '',
       );
 
       if (identifyResult['success'] != true) {
         debugPrint('❌ COMPLETE AUTH FLOW: Identifikatsiya bekor qilindi');
         return {
           'success': false,
-          'error': 'Identifikatsiya bekor qilindi yoki xato.',
+          'error':
+              identifyResult['error'] ??
+              'Identifikatsiya bekor qilindi yoki xato.',
         };
       }
 

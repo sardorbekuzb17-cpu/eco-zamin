@@ -31,58 +31,40 @@ function calculateClientHash(clientId, clientSecret, externalId = '') {
 // ============================================
 app.post('/api/myid/create-session', async (req, res) => {
     try {
-        console.log('📤 CREATE SESSION: Session yaratish so\'rovi...');
+        console.log('📤 CREATE SESSION: Session yaratish sorov...');
         console.log(`   CLIENT_ID: ${CLIENT_ID?.substring(0, 20)}...`);
         console.log(`   MYID_HOST: ${MYID_HOST}`);
 
-        // URL variantlarini sinab ko'ramiz
-        const urls = [
-            `${MYID_HOST}/api/v2/sdk/sessions`,
-            `${MYID_HOST}/api/v1/sdk/sessions`,
-            `${MYID_HOST}/sdk/sessions`,
-        ];
+        // External ID va Client Hash hisoblash
+        const externalId = `user_${Date.now()}`;
+        const clientHash = calculateClientHash(CLIENT_ID, CLIENT_SECRET, externalId);
 
-        let sessionResponse;
-        let lastError;
+        console.log(`   External ID: ${externalId}`);
+        console.log(`   Client Hash: ${clientHash.substring(0, 20)}...`);
 
-        for (const url of urls) {
-            try {
-                console.log(`   Sinab ko'rilmoqda: ${url}`);
+        // MyID API'ga to'g'ri so'rov - FAQAT client_id va client_hash yuboramiz
+        const url = `${MYID_HOST}/v2/sdk/sessions`;
+        console.log(`   URL: ${url}`);
 
-                // Client hash hisoblash
-                const externalId = `user_${Date.now()}`;
-                const clientHash = calculateClientHash(CLIENT_ID, CLIENT_SECRET, externalId);
+        const requestBody = {
+            client_id: CLIENT_ID,
+            client_hash: clientHash,
+            external_id: externalId,
+        };
 
-                console.log(`   External ID: ${externalId}`);
-                console.log(`   Client Hash: ${clientHash.substring(0, 20)}...`);
+        console.log(`   Request Body: ${JSON.stringify(requestBody)}`);
 
-                sessionResponse = await axios.post(
-                    url,
-                    {
-                        client_id: CLIENT_ID,
-                        client_secret: CLIENT_SECRET,
-                        client_hash: clientHash,
-                        external_id: externalId,
-                    },
-                    {
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        timeout: 10000,
-                    }
-                );
-                console.log(`   ✅ Muvaffaqiyatli: ${url}`);
-                break;
-            } catch (error) {
-                lastError = error;
-                console.log(`   ❌ Xato (${error.response?.status}): ${url}`);
-                console.log(`      ${error.response?.data?.error || error.message}`);
-            }
-        }
+        const sessionResponse = await axios.post(url, requestBody, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            timeout: 15000,
+        });
 
-        if (!sessionResponse) {
-            throw lastError;
-        }
+        console.log(`   ✅ Muvaffaqiyatli javob olindi`);
+        console.log(`   Response Status: ${sessionResponse.status}`);
+        console.log(`   Response Data: ${JSON.stringify(sessionResponse.data)}`);
 
         const sessionId = sessionResponse.data.session_id;
         const accessToken = sessionResponse.data.access_token;
@@ -94,17 +76,21 @@ app.post('/api/myid/create-session', async (req, res) => {
             success: true,
             session_id: sessionId,
             access_token: accessToken,
+            client_hash: clientHash,
         });
     } catch (error) {
         console.error('❌ CREATE SESSION XATOSI:');
         console.error(`   Status: ${error.response?.status}`);
         console.error(`   Data: ${JSON.stringify(error.response?.data)}`);
         console.error(`   Message: ${error.message}`);
+        console.error(`   URL: ${error.config?.url}`);
+        console.error(`   Request Body: ${JSON.stringify(error.config?.data)}`);
 
         res.status(error.response?.status || 500).json({
             success: false,
-            error: error.response?.data?.error_description || error.message,
+            error: error.response?.data?.error_description || error.response?.data?.error || error.message,
             details: error.response?.data,
+            status_code: error.response?.status,
         });
     }
 });

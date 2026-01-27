@@ -46,7 +46,7 @@ app.post('/api/myid/create-session', async (req, res) => {
 
         // 2-JADVAL: Session yaratish
         const sessionResponse = await axios.post(
-            `${MYID_HOST}/api/v2/sdk/sessions`,
+            `${MYID_HOST}/api/v1/sdk/sessions`,
             {},
             {
                 headers: {
@@ -216,7 +216,7 @@ app.post('/api/myid/user-data', async (req, res) => {
         console.log('📤 3-JADVAL: Foydalanuvchi ma\'lumotlari so\'rovi...');
 
         const response = await axios.post(
-            `${MYID_HOST}/api/v2/sdk/user-data`,
+            `${MYID_HOST}/api/v1/sdk/user-data`,
             { code },
             {
                 headers: {
@@ -389,7 +389,7 @@ app.post('/api/myid/complete-flow', async (req, res) => {
 
         // 2-JADVAL: Session yaratish
         const sessionResponse = await axios.post(
-            `${MYID_HOST}/api/v2/sdk/sessions`,
+            `${MYID_HOST}/api/v1/sdk/sessions`,
             {},
             {
                 headers: {

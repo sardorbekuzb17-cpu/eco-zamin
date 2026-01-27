@@ -86,14 +86,17 @@ export default async function handler(req, res) {
 
         const sessionId = sessionResponse.data.session_id;
         const accessToken = sessionResponse.data.access_token;
+        const clientHash = calculateClientHash(CLIENT_ID, CLIENT_SECRET, externalId);
 
         console.log('✅ CREATE SESSION: Session yaratildi');
         console.log(`   Session ID: ${sessionId}`);
+        console.log(`   Client Hash: ${clientHash.substring(0, 20)}...`);
 
         res.status(200).json({
             success: true,
             session_id: sessionId,
             access_token: accessToken,
+            client_hash: clientHash,
         });
     } catch (error) {
         console.error('❌ CREATE SESSION XATOSI:');

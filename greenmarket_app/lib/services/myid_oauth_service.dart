@@ -11,18 +11,7 @@ class MyIdOAuthService {
   // Backend URL
   static const String _backendUrl = 'https://myid-backend.vercel.app';
 
-  // MyID credentials - Client Hash
-  static const String _clientHash = '''-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5wQYaS8i1b0Rj5wuJLhI
-yDuTW/WoWB/kRbJCBHFLyFTxETADNa/CU+xw0moN9X10+MVD5kRMinMRQpGUVCrU
-XjUAEjwbdaCSLR6suRYI1EfDMQ5XFdJsfkAlNzZyyfBlif4OA4qxaMtdyvJCa/8n
-wHn2KC89BNhqBQMre7iLaW8Z9bArSulSxBJzbzPjd7Jkg4ccQ47bVyjEKBcu/1KX
-Ud/audUr1WsUpBf9yvgSTDRG2cuVXpMGEBJAqrsCS3RtIt7pEnGtr5FsB+UmBec9
-Ei97fK2LcVfWpc/m7WjWMz3mku/pmhSjC6Vl6dlOrP1dv/fJkhfh3axzXtZoxgV1
-QwIDAQAB
------END PUBLIC KEY-----''';
-
-  /// 1. Create Session - Bevosita MyID SDK'dan sessiya olish
+  /// 1. Create Session - Backend orqali MyID SDK'dan sessiya olish
   static Future<Map<String, dynamic>> createSession({
     String? phoneNumber,
     String? birthDate,
@@ -32,11 +21,55 @@ QwIDAQAB
     double? threshold,
   }) async {
     try {
-      // MyID SDK'dan bevosita sessiya olish
-      final sessionId = 'session_${DateTime.now().millisecondsSinceEpoch}';
+      debugPrint('🔵 CREATE SESSION: Backend ga sorov yuborilmoqda...');
 
-      return {'success': true, 'session_id': sessionId};
+      final response = await http
+          .post(
+            Uri.parse('$_backendUrl/api/myid/create-session'),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({
+              'phone_number': phoneNumber,
+              'birth_date': birthDate,
+              'is_resident': isResident,
+              'pass_data': passData,
+              'pinfl': pinfl,
+              'threshold': threshold,
+            }),
+          )
+          .timeout(const Duration(seconds: 45));
+
+      debugPrint('🔵 CREATE SESSION: Response status: ${response.statusCode}');
+      debugPrint('🔵 CREATE SESSION: Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final respData = json.decode(response.body);
+
+        if (respData['success'] == true) {
+          final sessionId = respData['session_id'];
+          debugPrint('✅ CREATE SESSION: Session yaratildi - $sessionId');
+
+          return {
+            'success': true,
+            'session_id': sessionId,
+            'access_token': respData['access_token'],
+            'client_hash': respData['client_hash'],
+          };
+        }
+
+        debugPrint('❌ CREATE SESSION: Backend xatosi - ${respData['error']}');
+        return {
+          'success': false,
+          'error': respData['error'] ?? 'Session yaratishda xato',
+        };
+      } else {
+        debugPrint('❌ CREATE SESSION: HTTP ${response.statusCode}');
+        return {
+          'success': false,
+          'error': 'Backend error: ${response.statusCode}',
+        };
+      }
     } catch (e) {
+      debugPrint('❌ CREATE SESSION XATOSI: $e');
       if (e.toString().contains('TimeoutException')) {
         return {
           'success': false,
@@ -50,17 +83,24 @@ QwIDAQAB
   /// 2. Identify User - MyID SDK orqali foydalanuvchini identifikatsiya qilish
   static Future<Map<String, dynamic>> identifyUser({
     required String sessionId,
+    required String clientHash,
     bool forcePassportScreen = false,
   }) async {
     try {
+      debugPrint('🔵 IDENTIFY USER: SDK ishga tushirilmoqda...');
+      debugPrint('   Session ID: $sessionId');
+      debugPrint('   Client Hash: ${clientHash.substring(0, 20)}...');
+
       final env = kReleaseMode
           ? MyIdEnvironment.PRODUCTION
           : MyIdEnvironment.DEBUG;
 
+      debugPrint('   Environment: ${env.toString()}');
+
       final result = await MyIdClient.start(
         config: MyIdConfig(
           sessionId: sessionId,
-          clientHash: _clientHash,
+          clientHash: clientHash,
           clientHashId: app_config.MyIDConfig.clientHashId,
           environment: env,
           entryType: MyIdEntryType.IDENTIFICATION,
@@ -73,6 +113,10 @@ QwIDAQAB
         iosAppearance: const MyIdIOSAppearance(),
       );
 
+      debugPrint('✅ IDENTIFY USER: SDK natijasi olindi');
+      debugPrint('   Code: ${result.code}');
+      debugPrint('   Base64 Image: ${result.base64?.substring(0, 50)}...');
+
       if (result.code != null && result.code!.isNotEmpty) {
         return {
           'success': true,
@@ -81,20 +125,26 @@ QwIDAQAB
           'result': result,
         };
       } else {
+        debugPrint('❌ IDENTIFY USER: Code qaytarilmadi');
         return {'success': false, 'error': 'MyID SDK: Code qaytarilmadi'};
       }
     } catch (e) {
+      debugPrint('❌ IDENTIFY USER XATOSI: $e');
       return {'success': false, 'error': 'SDK xatosi: $e'};
     }
   }
 
-  /// 3. Get User Profile - Backend orqali foydalanuvchi ma'lumotlarini olish
+  /// 3. Get User Profile - Backend orqali foydalanuvchi malumotlarini olish
   static Future<Map<String, dynamic>> getUserProfile({
     required String sessionId,
     String? code,
     String? base64Image,
   }) async {
     try {
+      debugPrint('🔵 GET USER PROFILE: Backend ga sorov yuborilmoqda...');
+      debugPrint('   Session ID: $sessionId');
+      debugPrint('   Code: ${code?.substring(0, 20)}...');
+
       final response = await http
           .post(
             Uri.parse('$_backendUrl/api/myid/get-user-info-with-images'),
@@ -107,30 +157,44 @@ QwIDAQAB
           )
           .timeout(const Duration(seconds: 60));
 
+      debugPrint(
+        '🔵 GET USER PROFILE: Response status: ${response.statusCode}',
+      );
+      debugPrint(
+        '🔵 GET USER PROFILE: Response body: ${response.body.substring(0, 200)}...',
+      );
+
       if (response.statusCode == 200) {
         final respData = json.decode(response.body);
 
         if (respData['success'] == true) {
           final data = respData['data'] ?? respData;
+          debugPrint('✅ GET USER PROFILE: Malumotlar olindi');
+
           return {
             'success': true,
+            'session_id': sessionId,
             'profile': data['profile'] ?? {},
             'reuid': data['reuid'],
             'comparison_value': data['comparison_value'],
             'data': data,
           };
         }
+
+        debugPrint('❌ GET USER PROFILE: Backend xatosi - ${respData['error']}');
         return {
           'success': false,
-          'error': respData['error'] ?? 'Ma\'lumot olishda xatolik',
+          'error': respData['error'] ?? 'Malumot olishda xatolik',
         };
       } else {
+        debugPrint('❌ GET USER PROFILE: HTTP ${response.statusCode}');
         return {
           'success': false,
           'error': 'Backend error: ${response.statusCode}',
         };
       }
     } catch (e) {
+      debugPrint('❌ GET USER PROFILE XATOSI: $e');
       if (e.toString().contains('TimeoutException')) {
         return {
           'success': false,
@@ -154,6 +218,8 @@ QwIDAQAB
     try {
       // 1. Sessiya yaratish
       onStatusUpdate?.call('Sessiya yaratilmoqda...');
+      debugPrint('🟢 COMPLETE AUTH FLOW: Boshlandi');
+
       final sessionResult = await createSession(
         phoneNumber: phoneNumber,
         birthDate: birthDate,
@@ -163,8 +229,16 @@ QwIDAQAB
         threshold: threshold,
       );
 
-      if (sessionResult['success'] != true) return sessionResult;
+      if (sessionResult['success'] != true) {
+        debugPrint('❌ COMPLETE AUTH FLOW: Session yaratishda xato');
+        return sessionResult;
+      }
+
       final sessionId = sessionResult['session_id'];
+      final clientHash = sessionResult['client_hash'] ?? '';
+
+      debugPrint('✅ COMPLETE AUTH FLOW: Session yaratildi - $sessionId');
+      debugPrint('   Client Hash: ${clientHash.substring(0, 20)}...');
 
       // 2. MyID SDK orqali identifikatsiya
       onStatusUpdate?.call('MyID SDK ishga tushirilmoqda...');
@@ -175,15 +249,19 @@ QwIDAQAB
 
       final identifyResult = await identifyUser(
         sessionId: sessionId,
+        clientHash: clientHash,
         forcePassportScreen: isEmptySession,
       );
 
       if (identifyResult['success'] != true) {
+        debugPrint('❌ COMPLETE AUTH FLOW: Identifikatsiya bekor qilindi');
         return {
           'success': false,
           'error': 'Identifikatsiya bekor qilindi yoki xato.',
         };
       }
+
+      debugPrint('✅ COMPLETE AUTH FLOW: Identifikatsiya muvaffaqiyatli');
 
       // 3. Backend'ga ma'lumotlarni yuborish
       onStatusUpdate?.call('Ma\'lumotlar backend\'ga yuborilmoqda...');
@@ -193,8 +271,15 @@ QwIDAQAB
         base64Image: identifyResult['base64_image'],
       );
 
+      if (profileResult['success'] == true) {
+        debugPrint('✅ COMPLETE AUTH FLOW: Yakunlandi muvaffaqiyatli');
+      } else {
+        debugPrint('❌ COMPLETE AUTH FLOW: Profil olishda xato');
+      }
+
       return profileResult;
     } catch (e) {
+      debugPrint('❌ COMPLETE AUTH FLOW XATOSI: $e');
       return {'success': false, 'error': 'Kutilmagan xato: $e'};
     }
   }

@@ -20,14 +20,73 @@ console.log(`📍 Port: ${PORT}`);
 console.log(`🌐 MyID Host: ${MYID_HOST}`);
 
 // ============================================
+// CREATE SESSION ENDPOINT (Flutter app uchun)
+// ============================================
+app.post('/api/myid/create-session', async (req, res) => {
+    try {
+        console.log('📤 CREATE SESSION: Session yaratish so\'rovi...');
+
+        // 1-JADVAL: Access token olish
+        const tokenResponse = await axios.post(
+            `${MYID_HOST}/oauth2/token`,
+            {
+                client_id: CLIENT_ID,
+                client_secret: CLIENT_SECRET,
+                grant_type: 'client_credentials',
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        const accessToken = tokenResponse.data.access_token;
+        console.log('✅ Access token olindi');
+
+        // 2-JADVAL: Session yaratish
+        const sessionResponse = await axios.post(
+            `${MYID_HOST}/api/v2/sdk/sessions`,
+            {},
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+            }
+        );
+
+        const sessionId = sessionResponse.data.session_id;
+        const newAccessToken = sessionResponse.data.access_token;
+
+        console.log('✅ CREATE SESSION: Session yaratildi');
+        console.log(`   Session ID: ${sessionId}`);
+
+        res.json({
+            success: true,
+            session_id: sessionId,
+            access_token: newAccessToken,
+        });
+    } catch (error) {
+        console.error('❌ CREATE SESSION XATOSI:', error.response?.status, error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({
+            success: false,
+            error: error.response?.data?.error_description || error.message,
+        });
+    }
+});
+
+// ============================================
 // 1-JADVAL: ACCESS TOKEN OLISH
 // ============================================
 app.post('/api/myid/access-token', async (req, res) => {
     try {
         console.log('📤 1-JADVAL: Access token so\'rovi...');
+        console.log(`   CLIENT_ID: ${CLIENT_ID?.substring(0, 20)}...`);
+        console.log(`   MYID_HOST: ${MYID_HOST}`);
 
         const response = await axios.post(
-            `${MYID_HOST}/oauth/token`,
+            `${MYID_HOST}/oauth2/token`,
             {
                 client_id: CLIENT_ID,
                 client_secret: CLIENT_SECRET,
@@ -57,8 +116,8 @@ app.post('/api/myid/access-token', async (req, res) => {
             expires_in: response.data.expires_in,
         });
     } catch (error) {
-        console.error('❌ 1-JADVAL XATOSI:', error.response?.data || error.message);
-        res.status(500).json({
+        console.error('❌ 1-JADVAL XATOSI:', error.response?.status, error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({
             success: false,
             error: error.response?.data?.error_description || error.message,
         });
@@ -226,14 +285,140 @@ app.post('/api/myid/user-data', async (req, res) => {
 });
 
 // ============================================
-// HEALTH CHECK
+// GET USER INFO WITH IMAGES (Flutter app uchun)
 // ============================================
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        myid_host: MYID_HOST,
-    });
+app.post('/api/myid/get-user-info-with-images', async (req, res) => {
+    try {
+        const { session_id, code, base64_image } = req.body;
+
+        if (!session_id || !code) {
+            return res.status(400).json({
+                success: false,
+                error: 'session_id va code majburiy',
+            });
+        }
+
+        console.log('📤 GET USER INFO: Foydalanuvchi ma\'lumotlari so\'rovi...');
+        console.log(`   Session ID: ${session_id}`);
+        console.log(`   Code: ${code?.substring(0, 20)}...`);
+
+        // 1-JADVAL: Access token olish
+        const tokenResponse = await axios.post(
+            `${MYID_HOST}/oauth2/token`,
+            {
+                client_id: CLIENT_ID,
+                client_secret: CLIENT_SECRET,
+                grant_type: 'client_credentials',
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        const accessToken = tokenResponse.data.access_token;
+        console.log('✅ Access token olindi');
+
+        // 3-JADVAL: Foydalanuvchi ma\'lumotlari
+        const userResponse = await axios.post(
+            `${MYID_HOST}/api/v2/sdk/user-data`,
+            { code },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+            }
+        );
+
+        const profile = userResponse.data;
+
+        console.log('✅ GET USER INFO: Foydalanuvchi ma\'lumotlari olindi');
+
+        res.json({
+            success: true,
+            profile: {
+                pinfl: profile.pinfl,
+                first_name: profile.name,
+                last_name: profile.surname,
+                birth_date: profile.birth_date,
+                gender: profile.gender,
+                phone_number: profile.phone_number,
+                email: profile.email,
+                passport_series: profile.passport_series,
+                passport_number: profile.passport_number,
+            },
+            reuid: profile.pinfl,
+            comparison_value: 0.95,
+            data: profile,
+        });
+    } catch (error) {
+        console.error('❌ GET USER INFO XATOSI:', error.response?.status, error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({
+            success: false,
+            error: error.response?.data?.error_description || error.message,
+        });
+    }
+});
+
+// ============================================
+// COMPLETE FLOW: BARCHA JADVALLARNI BAJARISH
+// ============================================
+app.post('/api/myid/complete-flow', async (req, res) => {
+    try {
+        console.log('📤 COMPLETE FLOW: Barcha jadvallarni bajarish...');
+
+        // 1-JADVAL: Access token olish
+        const tokenResponse = await axios.post(
+            `${MYID_HOST}/oauth2/token`,
+            {
+                client_id: CLIENT_ID,
+                client_secret: CLIENT_SECRET,
+                grant_type: 'client_credentials',
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        const accessToken = tokenResponse.data.access_token;
+        console.log('✅ 1-JADVAL: Access token olindi');
+
+        // 2-JADVAL: Session yaratish
+        const sessionResponse = await axios.post(
+            `${MYID_HOST}/api/v2/sdk/sessions`,
+            {},
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+            }
+        );
+
+        const sessionId = sessionResponse.data.session_id;
+        const newAccessToken = sessionResponse.data.access_token;
+
+        console.log('✅ 2-JADVAL: Session yaratildi');
+        console.log(`   Session ID: ${sessionId}`);
+
+        res.json({
+            success: true,
+            session_id: sessionId,
+            access_token: newAccessToken,
+            expires_in: sessionResponse.data.expires_in,
+            token_type: 'Bearer',
+        });
+    } catch (error) {
+        console.error('❌ COMPLETE FLOW XATOSI:', error.response?.status, error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({
+            success: false,
+            error: error.response?.data?.error_description || error.message,
+        });
+    }
 });
 
 // Vercel serverless environment uchun

@@ -57,11 +57,6 @@ QwIDAQAB
           ? MyIdEnvironment.PRODUCTION
           : MyIdEnvironment.DEBUG;
 
-      print('🔍 MyID SDK ishga tushirilmoqda...');
-      print('   Session ID: $sessionId');
-      print('   Client Hash ID: ${app_config.MyIDConfig.clientHashId}');
-      print('   Environment: $env');
-
       final result = await MyIdClient.start(
         config: MyIdConfig(
           sessionId: sessionId,
@@ -78,11 +73,6 @@ QwIDAQAB
         iosAppearance: const MyIdIOSAppearance(),
       );
 
-      print('✅ MyID SDK natijasi:');
-      print('   Code: ${result.code}');
-      print('   Base64: ${result.base64?.substring(0, 50)}...');
-      print('   Error: ${result.error}');
-
       if (result.code != null && result.code!.isNotEmpty) {
         return {
           'success': true,
@@ -91,16 +81,9 @@ QwIDAQAB
           'result': result,
         };
       } else {
-        print('❌ MyID SDK: Code qaytarilmadi');
-        print('   Error Code: ${result.error}');
-        return {
-          'success': false,
-          'error': 'MyID SDK: Code qaytarilmadi (Error: ${result.error})',
-        };
+        return {'success': false, 'error': 'MyID SDK: Code qaytarilmadi'};
       }
     } catch (e) {
-      print('❌ SDK xatosi: $e');
-      print('   Stack trace: ${StackTrace.current}');
       return {'success': false, 'error': 'SDK xatosi: $e'};
     }
   }
@@ -112,10 +95,6 @@ QwIDAQAB
     String? base64Image,
   }) async {
     try {
-      print('📤 Backend\'ga user profile so\'rovi yuborilmoqda...');
-      print('   Session ID: $sessionId');
-      print('   Code: ${code?.substring(0, 20)}...');
-
       final response = await http
           .post(
             Uri.parse('$_backendUrl/api/myid/get-user-info-with-images'),
@@ -128,11 +107,8 @@ QwIDAQAB
           )
           .timeout(const Duration(seconds: 60));
 
-      print('📥 Backend javob: ${response.statusCode}');
-
       if (response.statusCode == 200) {
         final respData = json.decode(response.body);
-        print('✅ Backend ma\'lumoti: ${respData['success']}');
 
         if (respData['success'] == true) {
           final data = respData['data'] ?? respData;
@@ -149,15 +125,12 @@ QwIDAQAB
           'error': respData['error'] ?? 'Ma\'lumot olishda xatolik',
         };
       } else {
-        print('❌ Backend xatosi: ${response.statusCode}');
-        print('   Response: ${response.body}');
         return {
           'success': false,
           'error': 'Backend error: ${response.statusCode}',
         };
       }
     } catch (e) {
-      print('❌ Backend so\'rovida xato: $e');
       if (e.toString().contains('TimeoutException')) {
         return {
           'success': false,
@@ -181,8 +154,6 @@ QwIDAQAB
     try {
       // 1. Sessiya yaratish
       onStatusUpdate?.call('Sessiya yaratilmoqda...');
-      print('📍 1-qadam: Sessiya yaratish');
-
       final sessionResult = await createSession(
         phoneNumber: phoneNumber,
         birthDate: birthDate,
@@ -192,17 +163,11 @@ QwIDAQAB
         threshold: threshold,
       );
 
-      if (sessionResult['success'] != true) {
-        print('❌ Sessiya yaratishda xato: ${sessionResult['error']}');
-        return sessionResult;
-      }
+      if (sessionResult['success'] != true) return sessionResult;
       final sessionId = sessionResult['session_id'];
-      print('✅ Sessiya yaratildi: $sessionId');
 
       // 2. MyID SDK orqali identifikatsiya
       onStatusUpdate?.call('MyID SDK ishga tushirilmoqda...');
-      print('📍 2-qadam: MyID SDK identifikatsiyasi');
-
       final isEmptySession =
           (phoneNumber == null || phoneNumber.isEmpty) &&
           (birthDate == null || birthDate.isEmpty) &&
@@ -214,33 +179,22 @@ QwIDAQAB
       );
 
       if (identifyResult['success'] != true) {
-        print('❌ Identifikatsiyada xato: ${identifyResult['error']}');
         return {
           'success': false,
           'error': 'Identifikatsiya bekor qilindi yoki xato.',
         };
       }
-      print('✅ Identifikatsiya muvaffaqiyatli');
 
       // 3. Backend'ga ma'lumotlarni yuborish
       onStatusUpdate?.call('Ma\'lumotlar backend\'ga yuborilmoqda...');
-      print('📍 3-qadam: Backend\'ga ma\'lumot yuborish');
-
       final profileResult = await getUserProfile(
         sessionId: sessionId,
         code: identifyResult['code'],
         base64Image: identifyResult['base64_image'],
       );
 
-      if (profileResult['success'] == true) {
-        print('✅ Barcha qadamlar muvaffaqiyatli yakunlandi');
-      } else {
-        print('❌ Profile olishda xato: ${profileResult['error']}');
-      }
-
       return profileResult;
     } catch (e) {
-      print('❌ Kutilmagan xato: $e');
       return {'success': false, 'error': 'Kutilmagan xato: $e'};
     }
   }

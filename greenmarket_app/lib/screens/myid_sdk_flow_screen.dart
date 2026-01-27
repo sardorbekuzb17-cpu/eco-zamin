@@ -69,16 +69,14 @@ class _MyIdSdkFlowScreenState extends State<MyIdSdkFlowScreen> {
 
         // To'liq profil ma'lumotlarini saqlash
         await prefs.setString('myid_profile', json.encode(result['profile']));
-        await prefs.setString('myid_access_token', result['access_token']);
         await prefs.setString('myid_session_id', result['session_id']);
 
         final userData = {
           'session_id': result['session_id'],
           'profile': result['profile'],
-          'data': result['data'],
+          'reuid': result['reuid'],
           'comparison_value': result['comparison_value'],
-          'pers_data': result['pers_data'],
-          'pin_id': result['pin_id'],
+          'data': result['data'],
           'timestamp': DateTime.now().toIso8601String(),
           'verified': true,
           'auth_method': 'sdk_flow',

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class MyIdService {
-  static const String baseUrl = "https://myid-backend.vercel.app";
+  static const String baseUrl = "http://192.168.3.1:3000";
 
   /// Session olish
   static Future<String?> createSession(String passport) async {

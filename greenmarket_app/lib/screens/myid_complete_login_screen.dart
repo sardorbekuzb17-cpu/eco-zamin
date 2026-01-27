@@ -71,8 +71,7 @@ class _MyIdCompleteLoginScreenState extends State<MyIdCompleteLoginScreen> {
         // Profil ma'lumotlarini saqlash
         await prefs.setString('myid_profile', json.encode(result['profile']));
 
-        // Access token va session ID ni saqlash
-        await prefs.setString('myid_access_token', result['access_token']);
+        // Session ID ni saqlash
         await prefs.setString('myid_session_id', result['session_id']);
 
         // Eski formatdagi ma'lumotlarni ham saqlash (backward compatibility)
@@ -80,9 +79,6 @@ class _MyIdCompleteLoginScreenState extends State<MyIdCompleteLoginScreen> {
           'session_id': result['session_id'],
           'profile': result['profile'],
           'data': result['data'],
-          'comparison_value': result['comparison_value'],
-          'pers_data': result['pers_data'],
-          'pin_id': result['pin_id'],
           'timestamp': DateTime.now().toIso8601String(),
           'verified': true,
         };

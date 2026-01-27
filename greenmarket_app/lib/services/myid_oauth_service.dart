@@ -7,11 +7,12 @@ import 'package:myid/enums.dart';
 import '../config/myid_config.dart' as app_config;
 
 /// MyID OAuth to'liq integratsiya servisi
-/// Bu servis barcha OAuth jarayonini boshqaradi
+/// Foydalanuvchi taqdim etgan Sequence Diagram'ga muvofiq ishlaydi
 class MyIdOAuthService {
-  static const String _baseUrl = 'https://myid.uz';
+  // Backend URL
+  static const String _backendUrl = 'https://myid-backend.vercel.app';
 
-  // MyID credentials
+  // MyID credentials - Client Hash
   static const String _clientHash = '''-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5wQYaS8i1b0Rj5wuJLhI
 yDuTW/WoWB/kRbJCBHFLyFTxETADNa/CU+xw0moN9X10+MVD5kRMinMRQpGUVCrU
@@ -22,43 +23,9 @@ Ei97fK2LcVfWpc/m7WjWMz3mku/pmhSjC6Vl6dlOrP1dv/fJkhfh3axzXtZoxgV1
 QwIDAQAB
 -----END PUBLIC KEY-----''';
 
-  /// 1. Access Token olish
-  /// Rasmda: "Primyer otveta" - access_token, expires_in, token_type
-  static Future<Map<String, dynamic>> getAccessToken() async {
-    try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/v1/auth/clients/access-token'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'client_id': app_config.MyIDConfig.clientId,
-          'client_secret': app_config.MyIDConfig.clientSecret,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return {
-          'success': true,
-          'access_token': data['access_token'],
-          'expires_in': data['expires_in'],
-          'token_type': data['token_type'],
-        };
-      } else {
-        return {
-          'success': false,
-          'error': 'Status code: ${response.statusCode}',
-        };
-      }
-    } catch (e) {
-      return {'success': false, 'error': e.toString()};
-    }
-  }
-
-  /// 2. Sessiya yaratish
-  /// Rasmda: "Sozdaniye sessii" - phone_number, birth_date, is_resident, pass_data, threshold
-  /// MUHIM: Agar hech qanday parametr berilmasa, MyID SDK pasport kiritish ekranini ko'rsatadi
+  /// 1. Create Session (Sequence Diagram Step 1-6)
+  /// Mobile APP -> Client Backend -> MyID Backend -> return session_id
   static Future<Map<String, dynamic>> createSession({
-    required String accessToken,
     String? phoneNumber,
     String? birthDate,
     bool? isResident,
@@ -69,7 +36,6 @@ QwIDAQAB
     try {
       final Map<String, dynamic> requestBody = {};
 
-      // Faqat berilgan parametrlarni qo'shamiz
       if (phoneNumber != null && phoneNumber.isNotEmpty) {
         requestBody['phone_number'] = phoneNumber;
       }
@@ -89,35 +55,47 @@ QwIDAQAB
         requestBody['threshold'] = threshold;
       }
 
-      // Agar hech qanday parametr yo'q bo'lsa, bo'sh body yuboramiz
-      // Bu MyID SDK ga pasport kiritish ekranini ko'rsatishni bildiradi
-
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/v2/sdk/sessions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-        body: json.encode(requestBody),
-      );
+      // Backend endpoint: /api/myid/create-session
+      final response = await http
+          .post(
+            Uri.parse('$_backendUrl/api/myid/create-session'),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode(requestBody),
+          )
+          .timeout(const Duration(seconds: 45));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return {'success': true, 'session_id': data['session_id']};
+        final sessionId = data['session_id'] ?? data['data']?['session_id'];
+
+        if (sessionId != null) {
+          return {'success': true, 'session_id': sessionId};
+        }
+        return {
+          'success': false,
+          'error': 'Session ID topilmadi',
+          'details': data,
+        };
       } else {
         return {
           'success': false,
-          'error': 'Status code: ${response.statusCode}',
+          'error': 'Backend xatosi (Session): ${response.statusCode}',
           'details': response.body,
         };
       }
     } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      if (e.toString().contains('TimeoutException')) {
+        return {
+          'success': false,
+          'error': 'Sessiya yaratishda timeout (45s). Iltimos qayta urining.',
+        };
+      }
+      return {'success': false, 'error': 'Sessiya xatosi: $e'};
     }
   }
 
-  /// 3. MyID SDK ishga tushirish va foydalanuvchi identifikatsiyasi
-  /// Rasmda: "Identification of user" - return result, image, code
+  /// 2. Identify User (Sequence Diagram Step 7-10)
+  /// Mobile APP -> MyIDSDK -> MyID Backend -> return code & image
   static Future<Map<String, dynamic>> identifyUser({
     required String sessionId,
     bool forcePassportScreen = false,
@@ -135,7 +113,6 @@ QwIDAQAB
           environment: env,
           entryType: MyIdEntryType.IDENTIFICATION,
           locale: MyIdLocale.UZBEK,
-          // MUHIM: residency = USER_DEFINED bo'lsa, SDK pasport ekranini ko'rsatadi
           residency: forcePassportScreen
               ? MyIdResidency.USER_DEFINED
               : MyIdResidency.RESIDENT,
@@ -143,57 +120,80 @@ QwIDAQAB
         iosAppearance: const MyIdIOSAppearance(),
       );
 
-      return {
-        'success': result.code == '0',
-        'code': result.code,
-        'result': result,
-      };
+      // result.code '0' bo'lsa muvaffaqiyatli (yoki null emasligi)
+      // Diagramma bo'yicha bizga code va image kerak
+      if (result.code != null && result.code!.isNotEmpty) {
+        return {
+          'success': true,
+          'code': result.code,
+          'base64_image': result.base64,
+          'result': result,
+        };
+      } else {
+        return {'success': false, 'error': 'MyID SDK: Code qaytarilmadi'};
+      }
     } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      return {'success': false, 'error': 'SDK xatosi: $e'};
     }
   }
 
-  /// 4. Foydalanuvchi ma'lumotlarini olish
-  /// Rasmda: "Polucheniye dannykh polzovatelya" - GET /sdk/sessions/{session_id}/profile
+  /// 3. Send to Backend & Retrieve User Data (Sequence Diagram Step 11-14)
+  /// Mobile APP -> Client Backend -> MyID Backend -> return profile, reuid, comparison_value
   static Future<Map<String, dynamic>> getUserProfile({
-    required String accessToken,
     required String sessionId,
+    String? code,
+    String? base64Image,
   }) async {
     try {
-      final response = await http.get(
-        Uri.parse('$_baseUrl/api/v1/sdk/sessions/$sessionId/profile'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-      );
+      // Sequence diagram bo'yicha: session_id, image (base64_image), code yuboriladi
+      final response = await http
+          .post(
+            Uri.parse('$_backendUrl/api/myid/get-user-info-with-images'),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({
+              'session_id': sessionId,
+              'code': code,
+              'base64_image': base64Image,
+            }),
+          )
+          .timeout(
+            const Duration(seconds: 60),
+          ); // Timeoutni 60 soniyaga oshiramiz
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final respData = json.decode(response.body);
+        if (respData['success'] == true) {
+          final data = respData['data'] ?? respData;
+          return {
+            'success': true,
+            'profile': data['profile'] ?? {},
+            'reuid': data['reuid'],
+            'comparison_value': data['comparison_value'],
+            'data': data,
+          };
+        }
         return {
-          'success': true,
-          'profile': data,
-          'data': data['data'],
-          'comparison_value': data['comparison_value'],
-          'pers_data': data['pers_data'],
-          'pin_id': data['pin_id'],
+          'success': false,
+          'error': respData['error'] ?? 'Ma\'lumot olishda xatolik',
         };
-      } else if (response.statusCode == 4) {
-        // Status code 4** - xato
-        return {'success': false, 'error': 'Error message'};
       } else {
         return {
           'success': false,
-          'error': 'Status code: ${response.statusCode}',
+          'error': 'Backend error: ${response.statusCode}',
         };
       }
     } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      if (e.toString().contains('TimeoutException')) {
+        return {
+          'success': false,
+          'error': 'Profil olishda timeout (60s). Iltimos qayta urining.',
+        };
+      }
+      return {'success': false, 'error': 'Profil xatosi: $e'};
     }
   }
 
-  /// TO'LIQ JARAYON - Barcha qadamlarni birlashtiradi
-  /// Bu funksiya rasmda ko'rsatilgan to'liq sequence diagram'ni amalga oshiradi
+  /// TO'LIQ OQIM (End-to-End)
   static Future<Map<String, dynamic>> completeAuthFlow({
     String? phoneNumber,
     String? birthDate,
@@ -204,24 +204,9 @@ QwIDAQAB
     Function(String)? onStatusUpdate,
   }) async {
     try {
-      // 1. Access Token olish
-      onStatusUpdate?.call('Access token olinmoqda...');
-      final tokenResult = await getAccessToken();
-
-      if (tokenResult['success'] != true) {
-        return {
-          'success': false,
-          'error': 'Access token olishda xatolik',
-          'details': tokenResult,
-        };
-      }
-
-      final accessToken = tokenResult['access_token'] as String;
-
-      // 2. Sessiya yaratish
+      // 1. Step 1-6: Session
       onStatusUpdate?.call('Sessiya yaratilmoqda...');
       final sessionResult = await createSession(
-        accessToken: accessToken,
         phoneNumber: phoneNumber,
         birthDate: birthDate,
         isResident: isResident,
@@ -230,25 +215,16 @@ QwIDAQAB
         threshold: threshold,
       );
 
-      if (sessionResult['success'] != true) {
-        return {
-          'success': false,
-          'error': 'Sessiya yaratishda xatolik',
-          'details': sessionResult,
-        };
-      }
+      if (sessionResult['success'] != true) return sessionResult;
+      final sessionId = sessionResult['session_id'];
 
-      final sessionId = sessionResult['session_id'] as String;
-
-      // Bo'sh sessiya ekanligini tekshirish
+      // 2. Step 7-10: SDK Identification
+      onStatusUpdate?.call('MyID SDK ishga tushirilmoqda...');
       final isEmptySession =
           (phoneNumber == null || phoneNumber.isEmpty) &&
           (birthDate == null || birthDate.isEmpty) &&
-          (passData == null || passData.isEmpty) &&
-          (pinfl == null || pinfl.isEmpty);
+          (passData == null || passData.isEmpty);
 
-      // 3. Foydalanuvchi identifikatsiyasi (MyID SDK)
-      onStatusUpdate?.call('MyID SDK ishga tushirilmoqda...');
       final identifyResult = await identifyUser(
         sessionId: sessionId,
         forcePassportScreen: isEmptySession,
@@ -257,82 +233,21 @@ QwIDAQAB
       if (identifyResult['success'] != true) {
         return {
           'success': false,
-          'error': 'Identifikatsiya xatosi',
-          'details': identifyResult,
+          'error': 'Identifikatsiya bekor qilindi yoki xato.',
         };
       }
 
-      // 4. Foydalanuvchi ma'lumotlarini olish
-      onStatusUpdate?.call('Foydalanuvchi ma\'lumotlari olinmoqda...');
+      // 3. Step 11-14: Send to backend
+      onStatusUpdate?.call('Ma\'lumotlar backend\'ga yuborilmoqda...');
       final profileResult = await getUserProfile(
-        accessToken: accessToken,
         sessionId: sessionId,
+        code: identifyResult['code'],
+        base64Image: identifyResult['base64_image'],
       );
 
-      if (profileResult['success'] != true) {
-        return {
-          'success': false,
-          'error': 'Profil ma\'lumotlarini olishda xatolik',
-          'details': profileResult,
-        };
-      }
-
-      // 5. Muvaffaqiyatli natija
-      return {
-        'success': true,
-        'access_token': accessToken,
-        'session_id': sessionId,
-        'profile': profileResult['profile'],
-        'data': profileResult['data'],
-        'comparison_value': profileResult['comparison_value'],
-        'pers_data': profileResult['pers_data'],
-        'pin_id': profileResult['pin_id'],
-        'message': 'Muvaffaqiyatli autentifikatsiya!',
-      };
+      return profileResult;
     } catch (e) {
-      return {'success': false, 'error': 'Kutilmagan xatolik: ${e.toString()}'};
-    }
-  }
-
-  /// 5. Sessiyani tiklash (Restore Session)
-  /// Rasmda: "Vosstanovleniye sessii" - GET /sdk/sessions/{session_id}
-  /// Agar SDK 10 daqiqadan ko'proq vaqt o'tgandan keyin qayta ishga tushirilsa,
-  /// sessiya statusini olish mumkin
-  static Future<Map<String, dynamic>> restoreSession({
-    required String accessToken,
-    required String sessionId,
-  }) async {
-    try {
-      final response = await http.get(
-        Uri.parse('$_baseUrl/api/v1/sdk/sessions/$sessionId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return {
-          'success': true,
-          'code': data['code'],
-          'status': data['status'],
-          'attempts': data['attempts'],
-          'job_id': data['job_id'],
-          'timestamp': data['timestamp'],
-          'reason': data['reason'],
-          'reason_code': data['reason_code'],
-        };
-      } else if (response.statusCode >= 400) {
-        return {'success': false, 'error': 'Error message', 'detail': 'err'};
-      } else {
-        return {
-          'success': false,
-          'error': 'Status code: ${response.statusCode}',
-        };
-      }
-    } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      return {'success': false, 'error': 'Kutilmagan xato: $e'};
     }
   }
 }

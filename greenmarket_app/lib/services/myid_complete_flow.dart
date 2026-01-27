@@ -88,7 +88,11 @@ class MyIdCompleteFlow {
       onStatusUpdate?.call('Foydalanuvchi profili olinmoqda...');
       debugPrint('📤 [3/4] Foydalanuvchi profili olinmoqda...');
 
-      final userData = await _getUserData(code);
+      final userData = await _getUserData(
+        code,
+        sessionId: sessionId,
+        base64Image: sdkResult['base64'],
+      );
       if (userData['success'] != true) {
         return {
           'success': false,
@@ -151,7 +155,11 @@ class MyIdCompleteFlow {
       onStatusUpdate?.call('Foydalanuvchi ma\'lumotlari olinmoqda...');
       debugPrint('📤 [3/4] Foydalanuvchi ma\'lumotlari olinmoqda...');
 
-      final userData = await _getUserData(code);
+      final userData = await _getUserData(
+        code,
+        sessionId: sessionId,
+        base64Image: sdkResult['base64'],
+      );
       if (userData['success'] != true) {
         return {
           'success': false,
@@ -180,7 +188,6 @@ class MyIdCompleteFlow {
     required String birthDate,
   }) async {
     try {
-      // Pasport ma'lumotlarini birlashtiramiz (AA1234567 formatida)
       final passData = '$passportSeries$passportNumber';
 
       final response = await http
@@ -189,20 +196,18 @@ class MyIdCompleteFlow {
             headers: {'Content-Type': 'application/json'},
             body: json.encode({'pass_data': passData, 'birth_date': birthDate}),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 45)); // Increased timeout
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        debugPrint('📥 Backend javob: ${response.body}');
-
-        if (data['success'] == true && data['data'] != null) {
-          return {'success': true, 'session_id': data['data']['session_id']};
+        if (data['success'] == true && (data['data'] != null || data['session_id'] != null)) {
+          return {'success': true, 'session_id': data['session_id'] ?? data['data']['session_id']};
         }
         return {'success': false, 'error': 'Sessiya ma\'lumotlari noto\'g\'ri'};
       } else {
         return {
           'success': false,
-          'error': 'Backend xatosi: ${response.statusCode}',
+          'error': 'Backend xatosi (Session): ${response.statusCode}',
         };
       }
     } catch (e) {
@@ -218,21 +223,18 @@ class MyIdCompleteFlow {
             Uri.parse('$_backendUrl/api/myid/create-session'),
             headers: {'Content-Type': 'application/json'},
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 45)); // Increased timeout
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        debugPrint('📥 Backend javob: ${response.body}');
-
-        // Backend javobini tekshirish
-        if (data['success'] == true && data['data'] != null) {
-          return {'success': true, 'session_id': data['data']['session_id']};
+        if (data['success'] == true && (data['data'] != null || data['session_id'] != null)) {
+          return {'success': true, 'session_id': data['session_id'] ?? data['data']['session_id']};
         }
         return {'success': false, 'error': 'Sessiya ma\'lumotlari noto\'g\'ri'};
       } else {
         return {
           'success': false,
-          'error': 'Backend xatosi: ${response.statusCode}',
+          'error': 'Backend xatosi (Session): ${response.statusCode}',
         };
       }
     } catch (e) {
@@ -253,44 +255,54 @@ class MyIdCompleteFlow {
         locale: MyIdLocale.UZBEK,
       );
 
-      debugPrint('🚀 SDK konfiguratsiyasi: $config');
-
       final result = await MyIdClient.start(
         config: config,
         iosAppearance: const MyIdIOSAppearance(),
       );
 
-      debugPrint('📥 SDK natijasi: $result');
-
-      return {'success': true, 'code': result.code, 'result': result};
+      return {
+        'success': result.code != null && result.code!.isNotEmpty,
+        'code': result.code,
+        'base64': result.base64,
+        'result': result
+      };
     } catch (e) {
       return {'success': false, 'error': 'SDK xatosi: $e'};
     }
   }
 
   /// Foydalanuvchi ma'lumotlarini olish
-  static Future<Map<String, dynamic>> _getUserData(String code) async {
+  static Future<Map<String, dynamic>> _getUserData(String code, {String? sessionId, String? base64Image}) async {
     try {
+      // get-user-info-with-images ishlatamiz rasm ham yuborilishi uchun
       final response = await http
           .post(
-            Uri.parse('$_backendUrl/api/myid/get-user-info'),
+            Uri.parse('$_backendUrl/api/myid/get-user-info-with-images'),
             headers: {'Content-Type': 'application/json'},
-            body: json.encode({'code': code}),
+            body: json.encode({
+              'code': code,
+              'session_id': sessionId,
+              'base64_image': base64Image
+            }),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 60)); // Increased timeout for profile
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        debugPrint('📥 Foydalanuvchi ma\'lumotlari: ${response.body}');
-
         if (data['success'] == true) {
-          return {'success': true, 'data': data['data']};
+          final resData = data['data'] ?? data;
+          return {
+            'success': true, 
+            'data': resData['profile'] ?? resData,
+            'reuid': resData['reuid'],
+            'comparison_value': resData['comparison_value'],
+          };
         }
-        return {'success': false, 'error': 'Ma\'lumot olinmadi'};
+        return {'success': false, 'error': data['error'] ?? 'Ma\'lumot olinmadi'};
       } else {
         return {
           'success': false,
-          'error': 'Backend xatosi: ${response.statusCode}',
+          'error': 'Backend xatosi (Data): ${response.statusCode}',
         };
       }
     } catch (e) {

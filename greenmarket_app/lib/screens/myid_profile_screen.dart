@@ -16,7 +16,6 @@ class _MyIdProfileScreenState extends State<MyIdProfileScreen> {
   MyIdProfileModel? _profile;
   bool _isLoading = true;
   String? _errorMessage;
-  String? _accessToken;
   String? _sessionId;
 
   @override
@@ -34,7 +33,6 @@ class _MyIdProfileScreenState extends State<MyIdProfileScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final profileData = prefs.getString('myid_profile');
-      _accessToken = prefs.getString('myid_access_token');
       _sessionId = prefs.getString('myid_session_id');
 
       if (profileData != null) {
@@ -58,10 +56,10 @@ class _MyIdProfileScreenState extends State<MyIdProfileScreen> {
   }
 
   Future<void> _refreshProfile() async {
-    if (_accessToken == null || _sessionId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Token yoki sessiya topilmadi')),
-      );
+    if (_sessionId == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Sessiya topilmadi')));
       return;
     }
 
@@ -71,46 +69,32 @@ class _MyIdProfileScreenState extends State<MyIdProfileScreen> {
     });
 
     try {
-      // Avval sessiyani tiklash
-      final restoreResult = await MyIdOAuthService.restoreSession(
-        accessToken: _accessToken!,
+      // Profil ma'lumotlarini olish (backend orqali)
+      final profileResult = await MyIdOAuthService.getUserProfile(
         sessionId: _sessionId!,
       );
 
-      if (restoreResult['success'] == true) {
-        // Keyin profil ma'lumotlarini olish
-        final profileResult = await MyIdOAuthService.getUserProfile(
-          accessToken: _accessToken!,
-          sessionId: _sessionId!,
+      if (profileResult['success'] == true) {
+        // Yangi ma'lumotlarni saqlash
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(
+          'myid_profile',
+          json.encode(profileResult['profile']),
         );
 
-        if (profileResult['success'] == true) {
-          // Yangi ma'lumotlarni saqlash
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString(
-            'myid_profile',
-            json.encode(profileResult['profile']),
-          );
+        setState(() {
+          _profile = MyIdProfileModel.fromJson(profileResult['profile']);
+          _isLoading = false;
+        });
 
-          setState(() {
-            _profile = MyIdProfileModel.fromJson(profileResult['profile']);
-            _isLoading = false;
-          });
-
-          if (mounted) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('Profil yangilandi')));
-          }
-        } else {
-          setState(() {
-            _errorMessage = profileResult['error'];
-            _isLoading = false;
-          });
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Profil yangilandi')));
         }
       } else {
         setState(() {
-          _errorMessage = restoreResult['error'];
+          _errorMessage = profileResult['error'];
           _isLoading = false;
         });
       }

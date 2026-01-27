@@ -10,7 +10,7 @@ import 'package:http/http.dart' as http;
 /// - 3-jadval: Foydalanuvchi ma'lumotlarini olish
 class MyIdTableRequests {
   /// Backend server URL
-  static const String _backendUrl = 'https://myid-backend.vercel.app';
+  static const String _backendUrl = 'http://192.168.3.1:3000';
 
   /// 1-JADVAL: Access Token Olish
   ///
@@ -47,7 +47,7 @@ class MyIdTableRequests {
               'client_secret': clientSecret,
             }),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -112,7 +112,7 @@ class MyIdTableRequests {
             },
             body: json.encode({'access_token': accessToken}),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -270,7 +270,7 @@ class MyIdTableRequests {
             },
             body: json.encode({'code': code}),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

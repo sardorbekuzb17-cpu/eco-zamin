@@ -128,7 +128,7 @@ class _MyIdCompleteFlowScreenState extends State<MyIdCompleteFlowScreen> {
           'base64_image': result.base64,
           'session_id': _sessionId,
         }),
-      );
+      ).timeout(const Duration(seconds: 60));
 
       if (userInfoResponse.statusCode != 200) {
         throw Exception('Profil olishda xato: ${userInfoResponse.body}');
@@ -201,6 +201,8 @@ class _MyIdCompleteFlowScreenState extends State<MyIdCompleteFlowScreen> {
         'pinfl': result.code,
         'session_id': _sessionId,
         'profile': profile,
+        'reuid': userInfo['reuid'],
+        'comparison_value': userInfo['comparison_value'],
         'verified': true,
         'timestamp': DateTime.now().toIso8601String(),
         'auth_method': 'complete_flow',

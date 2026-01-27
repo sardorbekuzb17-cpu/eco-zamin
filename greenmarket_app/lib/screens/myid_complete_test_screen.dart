@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/myid_table_requests.dart';
-import 'myid_successful_login_screen.dart';
+import '../services/myid_oauth_service.dart';
 
 /// MyID Kirish Ekrani
 class MyIdCompleteTestScreen extends StatefulWidget {
@@ -11,154 +10,48 @@ class MyIdCompleteTestScreen extends StatefulWidget {
 }
 
 class _MyIdCompleteTestScreenState extends State<MyIdCompleteTestScreen> {
-  String _status = 'Tayyor';
   bool _isLoading = false;
-  final List<String> _logs = [];
+  String? _statusMessage;
   String? _errorMessage;
+  Map<String, dynamic>? _userData;
 
-  // Credentials
-  final String _clientId =
-      'quyosh_24_sdk-OYD9rRoHYRjJkpQ2LQNV0EG6KSXtKruUMkOCdY1v';
-  final String _clientSecret =
-      'JRgNV6Av8DlocKJIAozwUrx4uCOU9mDLy5D9SKsEF6EvG2VlD7FU8nup5AYlU3biDfNwOEB0S54Sgup3CB3aJNJuk2wIkG3AIOlP';
-
-  void _addLog(String message) {
-    setState(() {
-      _logs.add('${DateTime.now().toString().split('.')[0]} - $message');
-    });
-    debugPrint(message);
-  }
-
-  Future<void> _testAllTables() async {
+  Future<void> _startMyIdFlow() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
-      _logs.clear();
-      _status = 'Jarayonda...';
+      _userData = null;
+      _statusMessage = 'Jarayon boshlanmoqda...';
     });
 
     try {
-      // 1-JADVAL: Access Token Olish
-      _addLog('📤 1-JADVAL: Access token olinmoqda...');
-      setState(() => _status = '1-JADVAL: Access token olinmoqda...');
-
-      final table1Result = await MyIdTableRequests.table1GetAccessToken(
-        clientId: _clientId,
-        clientSecret: _clientSecret,
-      );
-
-      if (!table1Result['success']) {
-        _addLog('❌ 1-JADVAL XATOSI: ${table1Result['error']}');
-        setState(() {
-          _errorMessage = table1Result['error'];
-          _status = 'Xato: 1-jadval';
-          _isLoading = false;
-        });
-        return;
-      }
-
-      final accessToken1 = table1Result['access_token'];
-      _addLog('✅ 1-JADVAL: Access token olindi');
-      _addLog('   Token uzunligi: ${accessToken1.length}');
-
-      // 2-JADVAL: Session Yaratish
-      _addLog('📤 2-JADVAL: Session yaratilmoqda...');
-      setState(() => _status = '2-JADVAL: Session yaratilmoqda...');
-
-      final table2Result = await MyIdTableRequests.table2CreateSession(
-        accessToken: accessToken1,
-      );
-
-      if (!table2Result['success']) {
-        _addLog('❌ 2-JADVAL XATOSI: ${table2Result['error']}');
-        if (table2Result['validation_errors'] != null) {
-          for (final error in table2Result['validation_errors']) {
-            _addLog('   - $error');
-          }
-        }
-        setState(() {
-          _errorMessage = table2Result['error'];
-          _status = 'Xato: 2-jadval';
-          _isLoading = false;
-        });
-        return;
-      }
-
-      final sessionId = table2Result['session_id'];
-      final accessToken2 = table2Result['access_token'];
-      _addLog('✅ 2-JADVAL: Session yaratildi');
-      _addLog('   Session ID: $sessionId');
-      _addLog('   Access token uzunligi: ${accessToken2.length}');
-
-      // SDK ni ishga tushirish uchun eslatma
-      _addLog('⚠️  SDK ni ishga tushirish uchun session_id dan foydalaning');
-      _addLog('   Session ID: $sessionId');
-
-      // Test uchun dummy code ishlatamiz
-      // Haqiqiy ilovada SDK'dan code olish kerak
-      const dummyCode = 'test_code_12345';
-      _addLog('📝 Test uchun dummy code ishlatilmoqda: $dummyCode');
-
-      // 3-JADVAL: Foydalanuvchi Ma'lumotlarini Olish
-      _addLog('📤 3-JADVAL: Foydalanuvchi ma\'lumotlari olinmoqda...');
-      setState(
-        () => _status = '3-JADVAL: Foydalanuvchi ma\'lumotlari olinmoqda...',
-      );
-
-      final table3Result = await MyIdTableRequests.table3GetUserData(
-        code: dummyCode,
-        accessToken: accessToken2,
-      );
-
-      if (!table3Result['success']) {
-        _addLog('❌ 3-JADVAL XATOSI: ${table3Result['error']}');
-        if (table3Result['validation_errors'] != null) {
-          for (final error in table3Result['validation_errors']) {
-            _addLog('   - $error');
-          }
-        }
-        setState(() {
-          _errorMessage = table3Result['error'];
-          _status = 'Xato: 3-jadval';
-          _isLoading = false;
-        });
-        return;
-      }
-
-      final profile = table3Result['profile'];
-      _addLog('✅ 3-JADVAL: Foydalanuvchi ma\'lumotlari olindi');
-      _addLog('   PINFL: ${profile['pinfl']}');
-      _addLog('   Ism: ${profile['name']}');
-      _addLog('   Familiya: ${profile['surname']}');
-
-      // Muvaffaqiyat
-      _addLog('✅ BARCHA JADVALLAR MUVAFFAQIYATLI BAJARILDI!');
-      setState(() {
-        _status = 'Muvaffaqiyatli!';
-        _isLoading = false;
-      });
-
-      // Muvaffaqiyatli kirish ekraniga o'tish
-      if (mounted) {
-        await Future.delayed(const Duration(seconds: 2));
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => MyIdSuccessfulLoginScreen(
-                userData: profile,
-                accessToken: accessToken2,
-                sessionId: sessionId,
-              ),
-            ),
+      final result =
+          await MyIdOAuthService.completeAuthFlow(
+            onStatusUpdate: (status) {
+              setState(() => _statusMessage = status);
+            },
+          ).timeout(
+            const Duration(seconds: 30),
+            onTimeout: () => {
+              'success': false,
+              'error': 'Timeout: Session yaratilmoqda ko\'p vaqt oldi',
+            },
           );
-        }
+
+      if (result['success'] == true) {
+        setState(() {
+          _userData = result;
+          _isLoading = false;
+          _statusMessage = 'Muvaffaqiyatli yakunlandi!';
+        });
+      } else {
+        setState(() {
+          _errorMessage = result['error'] ?? 'Noma\'lum xato';
+          _isLoading = false;
+        });
       }
     } catch (e) {
-      _addLog('❌ XATOLIK: $e');
       setState(() {
-        _errorMessage = e.toString();
-        _status = 'Xato';
+        _errorMessage = 'Xato: $e';
         _isLoading = false;
       });
     }
@@ -168,115 +61,122 @@ class _MyIdCompleteTestScreenState extends State<MyIdCompleteTestScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('MyID Kirish'), centerTitle: true),
-      body: Column(
-        children: [
-          // Status kartasi
-          Container(
-            color: _isLoading
-                ? Colors.blue[50]
-                : _errorMessage != null
-                ? Colors.red[50]
-                : Colors.green[50],
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    if (_isLoading)
-                      const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    else if (_errorMessage != null)
-                      Icon(Icons.error, color: Colors.red[700], size: 24)
-                    else
-                      Icon(
-                        Icons.check_circle,
-                        color: Colors.green[700],
-                        size: 24,
-                      ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _status,
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (_errorMessage != null)
+                Container(
+                  width: double.infinity,
+                  color: Colors.red[50],
+                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.only(bottom: 24),
+                  child: Text(
+                    _errorMessage!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.red[700], fontSize: 14),
+                  ),
+                ),
+
+              if (_statusMessage != null && _isLoading)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: Text(
+                    _statusMessage!,
+                    style: TextStyle(
+                      color: Colors.blue[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+
+              if (_userData != null)
+                Container(
+                  width: double.infinity,
+                  color: Colors.green[50],
+                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.only(bottom: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '✅ Muvaffaqiyatli kirish!',
                         style: TextStyle(
+                          color: Colors.green[700],
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: _isLoading
-                              ? Colors.blue[900]
-                              : _errorMessage != null
-                              ? Colors.red[900]
-                              : Colors.green[900],
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 12),
+                      _buildDataRow('Session ID:', _userData!['session_id']),
+                      _buildDataRow(
+                        'Full Name:',
+                        '${_userData!['profile']['first_name']} ${_userData!['profile']['last_name']}',
+                      ),
+                      _buildDataRow(
+                        'Comparison:',
+                        '${_userData!['comparison_value']}',
+                      ),
+                      _buildDataRow('ReUID:', '${_userData!['reuid']}'),
+                    ],
+                  ),
                 ),
-                if (_errorMessage != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    _errorMessage!,
-                    style: TextStyle(fontSize: 13, color: Colors.red[700]),
-                  ),
-                ],
-              ],
-            ),
-          ),
 
-          // Loglar
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _logs.length,
-              itemBuilder: (context, index) {
-                final log = _logs[index];
-                final isError = log.contains('❌');
-                final isSuccess = log.contains('✅');
-                final isInfo =
-                    log.contains('📤') ||
-                    log.contains('📝') ||
-                    log.contains('⚠️');
+              if (_isLoading)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 32),
+                  child: CircularProgressIndicator(color: Color(0xFF15803D)),
+                ),
 
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    log,
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton.icon(
+                  onPressed: _isLoading ? null : _startMyIdFlow,
+                  icon: const Icon(Icons.login, color: Colors.white),
+                  label: const Text(
+                    'MyID orqali kirish',
                     style: TextStyle(
-                      fontSize: 12,
-                      fontFamily: 'monospace',
-                      color: isError
-                          ? Colors.red[700]
-                          : isSuccess
-                          ? Colors.green[700]
-                          : isInfo
-                          ? Colors.blue[700]
-                          : Colors.grey[700],
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                );
-              },
-            ),
-          ),
-
-          // Tugma
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: _isLoading ? null : _testAllTables,
-                  icon: const Icon(Icons.login),
-                  label: const Text('MyID'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF15803D),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
                   ),
                 ),
-              ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDataRow(String label, dynamic value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              color: Color(0xFF1A5D1A),
             ),
+          ),
+          Text(
+            '$value',
+            style: const TextStyle(fontSize: 13, fontFamily: 'monospace'),
           ),
         ],
       ),

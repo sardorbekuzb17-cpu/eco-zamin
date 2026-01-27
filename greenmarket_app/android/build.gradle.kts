@@ -2,6 +2,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url = uri("https://artifactory.aigroup.uz:443/artifactory/myid/") }
     }
 }
 

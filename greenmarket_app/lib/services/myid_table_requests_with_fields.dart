@@ -147,7 +147,7 @@ class MyIdTableRequestsWithFields {
             },
             body: json.encode(requestBody),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -290,7 +290,7 @@ class MyIdTableRequestsWithFields {
             },
             body: json.encode({'pass_data': passData, 'birth_date': birthDate}),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

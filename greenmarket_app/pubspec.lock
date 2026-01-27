@@ -688,9 +688,10 @@ packages:
   myid:
     dependency: "direct main"
     description:
-      path: "../myid-3.1.41"
-      relative: true
-    source: path
+      name: myid
+      sha256: "2c1ddd31112f2e304755e4b261ae2542f81fdd541aba283929799589e0f62c28"
+      url: "https://pub.dev"
+    source: hosted
     version: "3.1.41"
   native_toolchain_c:
     dependency: transitive

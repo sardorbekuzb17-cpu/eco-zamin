@@ -1,0 +1,9 @@
+{
+    "name": "greenmarket-web",
+    "version": "1.0.0",
+    "description": "GreenMarket - Sabzavot va Mevalar",
+    "main": "index.html",
+    "scripts": {
+        "build": "echo 'Static site'"
+    }
+}

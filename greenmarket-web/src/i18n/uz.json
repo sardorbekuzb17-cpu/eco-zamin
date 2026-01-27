@@ -1,0 +1,190 @@
+{
+    "title": "GreenMarket - Yashil Kelajak Uchun Raqamli Platforma",
+    "header": {
+        "home": "Bosh sahifa",
+        "greenShop": "Yashil Do'kon",
+        "kitchenGarden": "Oshxona Bog'i",
+        "catalog": "Mahsulotlar katalogi",
+        "sadaqah": "Yashil Jamg'arma",
+        "seasonalTips": "Mavsumiy Eslatgich",
+        "neighborhoodRating": "Mahalla Reytingi",
+        "greenCredit": "Kredit va Sug'urta",
+        "kidsZone": "Bolalar Zonasi",
+        "greenNews": "Yangiliklar",
+        "howItWorks": "Qanday ishlaydi",
+        "aiAdvisor": "AI Maslahatchi",
+        "orders": "Mening buyurtmalarim",
+        "contact": "Aloqa"
+    },
+    "hero": {
+        "title": "Yashil kelajakni",
+        "subtitle": "bugundan boshlab birga quramiz.",
+        "description": "GreenMarket - bu daraxt ekishni osonlashtiruvchi, tabiatga o'z hissangizni qo'shishga yordam beruvchi va ekologik mas'uliyatni rag'batlantiruvchi raqamli platforma.",
+        "viewProducts": "Mahsulotlarni ko'rish"
+    },
+    "greenShop": {
+        "title": "Yashil Do'kon",
+        "subtitle": "Tabiatga g'amxo'rlik qilish uchun barcha kerakli narsalar bir joyda",
+        "trees": "Daraxtlar",
+        "seedlings": "Ko'chatlar",
+        "seeds": "Urug'lar",
+        "pots": "Idishlar",
+        "fertilizers": "O'g'itlar",
+        "decor": "Dekor va Aksessuarlar",
+        "addToCart": "Savatga"
+    },
+    "products": {
+        "appleTree": {
+            "name": "Olma daraxti",
+            "desc": "Mevali daraxt, yuqori hosil",
+            "price": "50,000 so'm"
+        },
+        "pearTree": {
+            "name": "Nok daraxti",
+            "desc": "Shirin mevali daraxt",
+            "price": "40,000 so'm"
+        },
+        "apricotTree": {
+            "name": "O'rik daraxti",
+            "desc": "Mazali mevali daraxt",
+            "price": "30,000 so'm"
+        },
+        "cherryTree": {
+            "name": "Gilos daraxti",
+            "desc": "Mazali mevali daraxt",
+            "price": "30,000 so'm"
+        },
+        "tomatoSeedling": {
+            "name": "Pomidor ko'chati",
+            "desc": "Yuqori hosilli nav",
+            "price": "5,000 so'm"
+        },
+        "cucumberSeedling": {
+            "name": "Bodring ko'chati",
+            "desc": "Tez o'sadigan",
+            "price": "4,000 so'm"
+        },
+        "pepperSeedling": {
+            "name": "Qalampir ko'chati",
+            "desc": "Shirin qalampir",
+            "price": "6,000 so'm"
+        },
+        "eggplantSeedling": {
+            "name": "Baqlajon ko'chati",
+            "desc": "Yirik mevali",
+            "price": "5,500 so'm"
+        },
+        "carrotSeed": {
+            "name": "Sabzi urug'i",
+            "desc": "Tez o'sadigan",
+            "price": "3,000 so'm"
+        },
+        "onionSeed": {
+            "name": "Piyoz urug'i",
+            "desc": "Yuqori hosilli",
+            "price": "2,500 so'm"
+        },
+        "flowerSeed": {
+            "name": "Gul urug'i (aralash)",
+            "desc": "Rangli gullar",
+            "price": "8,000 so'm"
+        },
+        "grassSeed": {
+            "name": "Maysazor urug'i",
+            "desc": "Yashil maysazor",
+            "price": "15,000 so'm"
+        },
+        "smallPot": {
+            "name": "Plastik idish (kichik)",
+            "desc": "15cm diametr",
+            "price": "8,000 so'm"
+        },
+        "mediumPot": {
+            "name": "Plastik idish (o'rta)",
+            "desc": "25cm diametr",
+            "price": "15,000 so'm"
+        },
+        "clayPot": {
+            "name": "Sopol idish",
+            "desc": "Chiroyli dizayn",
+            "price": "35,000 so'm"
+        },
+        "hangingPot": {
+            "name": "Osilgan idish",
+            "desc": "Zanjir bilan",
+            "price": "45,000 so'm"
+        },
+        "organicFertilizer": {
+            "name": "Organik o'g'it (1kg)",
+            "desc": "Tabiiy, xavfsiz",
+            "price": "12,000 so'm"
+        },
+        "mineralFertilizer": {
+            "name": "Mineral o'g'it (500g)",
+            "desc": "NPK kompleks",
+            "price": "18,000 so'm"
+        },
+        "liquidFertilizer": {
+            "name": "Suyuq o'g'it (1L)",
+            "desc": "Tez ta'sir qiluvchi",
+            "price": "25,000 so'm"
+        },
+        "compost": {
+            "name": "Kompost (5kg)",
+            "desc": "Tayyorlangan",
+            "price": "20,000 so'm"
+        },
+        "decorStones": {
+            "name": "Dekorativ toshlar (1kg)",
+            "desc": "Rangli toshlar",
+            "price": "10,000 so'm"
+        },
+        "plantLabels": {
+            "name": "O'simlik yorliqlari (10ta)",
+            "desc": "Plastik yorliqlar",
+            "price": "5,000 so'm"
+        },
+        "wateringCan": {
+            "name": "Sug'orish idishi",
+            "desc": "2L sig'im",
+            "price": "22,000 so'm"
+        },
+        "gardenScissors": {
+            "name": "Bog' qaychi",
+            "desc": "O'tkir, ergonomik",
+            "price": "35,000 so'm"
+        }
+    },
+    "kitchenGarden": {
+        "title": "Oshxona Bog'i",
+        "subtitle": "Rayhon, ukrop, yalpiz - oshxonangizda doim yangi ko'kat!",
+        "suitablePlants": "Oshxonaga mos o'simliklar",
+        "withRecipe": "Savatga + Retsept",
+        "todaysCooking": "Bugun nima osh qilamiz?",
+        "recipeDescription": "Retsept tanlang, kerakli ko'katlar avtomatik savatga qo'shiladi!",
+        "viewAllRecipes": "Barcha retseptlarni ko'rish (50+)",
+        "kitchenSet": "Oshxona Bog'i To'plami",
+        "getSet": "To'plamni olish",
+        "tips": "Oshxona bog'i uchun maslahatlar"
+    },
+    "catalog": {
+        "title": "Mahsulotlar katalogi",
+        "subtitle": "Sizning hududingizga mos keladigan ba'zi o'simlik turlari.",
+        "searchPlaceholder": "Mahsulot nomini kiriting...",
+        "minPrice": "Minimal narx (so'm)",
+        "maxPrice": "Maksimal narx (so'm)",
+        "productType": "Mahsulot turi",
+        "all": "Barchasi",
+        "tree": "Daraxt",
+        "fruit": "Meva",
+        "bush": "Buta",
+        "clear": "Tozalash",
+        "noResults": "Natija topilmadi",
+        "tryAgain": "Boshqa qidiruv so'zi yoki filtrlarni sinab ko'ring"
+    },
+    "footer": {
+        "copyright": "© 2025 GreenMarket. Barcha huquqlar himoyalangan."
+    },
+    "langName": "O'zbek",
+    "langFlag": "🇺🇿"
+}

@@ -97,7 +97,6 @@ QwIDAQAB
         () => _statusMessage = 'Foydalanuvchi ma\'lumotlari olinmoqda...',
       );
       final profileResult = await MyIdOAuthService.getUserProfile(
-        accessToken: accessToken,
         sessionId: sessionId,
       );
 
@@ -110,16 +109,12 @@ QwIDAQAB
         'myid_profile',
         json.encode(profileResult['profile']),
       );
-      await prefs.setString('myid_access_token', accessToken);
       await prefs.setString('myid_session_id', sessionId);
 
       final userData = {
         'session_id': sessionId,
         'profile': profileResult['profile'],
         'data': profileResult['data'],
-        'comparison_value': profileResult['comparison_value'],
-        'pers_data': profileResult['pers_data'],
-        'pin_id': profileResult['pin_id'],
         'timestamp': DateTime.now().toIso8601String(),
         'verified': true,
         'auth_method': 'oauth_full',

@@ -21,7 +21,7 @@ class MyIdUserService {
             headers: {'Content-Type': 'application/json'},
           )
           .timeout(
-            const Duration(seconds: 30),
+            const Duration(seconds: 60),
             onTimeout: () {
               throw Exception('Backend bilan aloqa vaqti tugadi');
             },
@@ -68,7 +68,7 @@ class MyIdUserService {
             headers: {'Content-Type': 'application/json'},
           )
           .timeout(
-            const Duration(seconds: 30),
+            const Duration(seconds: 60),
             onTimeout: () {
               throw Exception('Backend bilan aloqa vaqti tugadi');
             },
@@ -108,7 +108,7 @@ class MyIdUserService {
             headers: {'Content-Type': 'application/json'},
           )
           .timeout(
-            const Duration(seconds: 30),
+            const Duration(seconds: 60),
             onTimeout: () {
               throw Exception('Backend bilan aloqa vaqti tugadi');
             },
@@ -148,7 +148,7 @@ class MyIdUserService {
       final response = await http
           .get(Uri.parse('$_backendUrl/api/health'))
           .timeout(
-            const Duration(seconds: 10),
+            const Duration(seconds: 60),
             onTimeout: () {
               throw Exception('Backend bilan aloqa vaqti tugadi');
             },

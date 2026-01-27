@@ -25,39 +25,28 @@ console.log(`🌐 MyID Host: ${MYID_HOST}`);
 app.post('/api/myid/create-session', async (req, res) => {
     try {
         console.log('📤 CREATE SESSION: Session yaratish so\'rovi...');
+        console.log(`   CLIENT_ID: ${CLIENT_ID?.substring(0, 20)}...`);
+        console.log(`   MYID_HOST: ${MYID_HOST}`);
 
-        // 1-JADVAL: Access token olish
-        const tokenResponse = await axios.post(
-            `${MYID_HOST}/oauth2/token`,
+        // Backend-to-Backend so'rov
+        // MyID API'ga to'g'ridan-to'g'ri sessiya yaratish so'rovini yuboramiz
+        const sessionResponse = await axios.post(
+            `${MYID_HOST}/api/v2/sdk/sessions`,
             {
                 client_id: CLIENT_ID,
                 client_secret: CLIENT_SECRET,
-                grant_type: 'client_credentials',
+                // external_id: `user_${Date.now()}`, // Ixtiyoriy
             },
             {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-            }
-        );
-
-        const accessToken = tokenResponse.data.access_token;
-        console.log('✅ Access token olindi');
-
-        // 2-JADVAL: Session yaratish
-        const sessionResponse = await axios.post(
-            `${MYID_HOST}/api/v1/sdk/sessions`,
-            {},
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`,
-                },
+                timeout: 10000,
             }
         );
 
         const sessionId = sessionResponse.data.session_id;
-        const newAccessToken = sessionResponse.data.access_token;
+        const accessToken = sessionResponse.data.access_token;
 
         console.log('✅ CREATE SESSION: Session yaratildi');
         console.log(`   Session ID: ${sessionId}`);
@@ -65,13 +54,18 @@ app.post('/api/myid/create-session', async (req, res) => {
         res.json({
             success: true,
             session_id: sessionId,
-            access_token: newAccessToken,
+            access_token: accessToken,
         });
     } catch (error) {
-        console.error('❌ CREATE SESSION XATOSI:', error.response?.status, error.response?.data || error.message);
+        console.error('❌ CREATE SESSION XATOSI:');
+        console.error(`   Status: ${error.response?.status}`);
+        console.error(`   Data: ${JSON.stringify(error.response?.data)}`);
+        console.error(`   Message: ${error.message}`);
+
         res.status(error.response?.status || 500).json({
             success: false,
             error: error.response?.data?.error_description || error.message,
+            details: error.response?.data,
         });
     }
 });
@@ -216,7 +210,7 @@ app.post('/api/myid/user-data', async (req, res) => {
         console.log('📤 3-JADVAL: Foydalanuvchi ma\'lumotlari so\'rovi...');
 
         const response = await axios.post(
-            `${MYID_HOST}/api/v1/sdk/user-data`,
+            `${MYID_HOST}/api/v2/sdk/user-data`,
             { code },
             {
                 headers: {
@@ -389,7 +383,7 @@ app.post('/api/myid/complete-flow', async (req, res) => {
 
         // 2-JADVAL: Session yaratish
         const sessionResponse = await axios.post(
-            `${MYID_HOST}/api/v1/sdk/sessions`,
+            `${MYID_HOST}/api/v2/sdk/sessions`,
             {},
             {
                 headers: {

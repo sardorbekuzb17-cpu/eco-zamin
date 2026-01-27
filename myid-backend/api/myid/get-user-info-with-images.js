@@ -57,7 +57,7 @@ export default async function handler(req, res) {
 
         // 3-JADVAL: Foydalanuvchi ma\'lumotlari
         const userResponse = await axios.post(
-            `${MYID_HOST}/api/v1/sdk/user-data`,
+            `${MYID_HOST}/api/v2/sdk/user-data`,
             { code },
             {
                 headers: {

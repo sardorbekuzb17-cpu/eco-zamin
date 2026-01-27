@@ -116,6 +116,8 @@ QwIDAQAB
           residency: forcePassportScreen
               ? MyIdResidency.USER_DEFINED
               : MyIdResidency.RESIDENT,
+          // Huawei qurilmalari uchun (agar kerak bo'lsa)
+          huaweiAppId: '', // Huawei App ID'ni shu yerga qo'ying
         ),
         iosAppearance: const MyIdIOSAppearance(),
       );

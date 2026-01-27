@@ -70,4 +70,7 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    
+    // MyID Huawei Integrity SDK (Huawei qurilmalari uchun)
+    implementation("uz.myid.sdk.capture:myid-integrity-sdk:1.0.6")
 }

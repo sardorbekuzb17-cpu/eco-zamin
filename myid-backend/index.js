@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
+const crypto = require('crypto');
 require('dotenv').config();
 
 const app = express();
@@ -18,6 +19,12 @@ const MYID_HOST = process.env.MYID_HOST;
 console.log(`🚀 MyID Backend ishga tushdi`);
 console.log(`📍 Port: ${PORT}`);
 console.log(`🌐 MyID Host: ${MYID_HOST}`);
+
+// Client hash hisoblash funksiyasi
+function calculateClientHash(clientId, clientSecret, externalId = '') {
+    const data = `${clientId}${clientSecret}${externalId}`;
+    return crypto.createHash('sha256').update(data).digest('hex');
+}
 
 // ============================================
 // CREATE SESSION ENDPOINT (Flutter app uchun)
@@ -41,11 +48,21 @@ app.post('/api/myid/create-session', async (req, res) => {
         for (const url of urls) {
             try {
                 console.log(`   Sinab ko'rilmoqda: ${url}`);
+
+                // Client hash hisoblash
+                const externalId = `user_${Date.now()}`;
+                const clientHash = calculateClientHash(CLIENT_ID, CLIENT_SECRET, externalId);
+
+                console.log(`   External ID: ${externalId}`);
+                console.log(`   Client Hash: ${clientHash.substring(0, 20)}...`);
+
                 sessionResponse = await axios.post(
                     url,
                     {
                         client_id: CLIENT_ID,
                         client_secret: CLIENT_SECRET,
+                        client_hash: clientHash,
+                        external_id: externalId,
                     },
                     {
                         headers: {

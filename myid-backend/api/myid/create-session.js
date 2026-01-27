@@ -1,8 +1,15 @@
 const axios = require('axios');
+const crypto = require('crypto');
 
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const MYID_HOST = process.env.MYID_HOST;
+
+// Client hash hisoblash funksiyasi
+function calculateClientHash(clientId, clientSecret, externalId = '') {
+    const data = `${clientId}${clientSecret}${externalId}`;
+    return crypto.createHash('sha256').update(data).digest('hex');
+}
 
 export default async function handler(req, res) {
     // CORS sozlamalari
@@ -41,11 +48,21 @@ export default async function handler(req, res) {
         for (const url of urls) {
             try {
                 console.log(`   Sinab ko'rilmoqda: ${url}`);
+
+                // Client hash hisoblash
+                const externalId = `user_${Date.now()}`;
+                const clientHash = calculateClientHash(CLIENT_ID, CLIENT_SECRET, externalId);
+
+                console.log(`   External ID: ${externalId}`);
+                console.log(`   Client Hash: ${clientHash.substring(0, 20)}...`);
+
                 sessionResponse = await axios.post(
                     url,
                     {
                         client_id: CLIENT_ID,
                         client_secret: CLIENT_SECRET,
+                        client_hash: clientHash,
+                        external_id: externalId,
                     },
                     {
                         headers: {

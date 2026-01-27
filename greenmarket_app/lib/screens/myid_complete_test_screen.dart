@@ -73,10 +73,30 @@ class _MyIdCompleteTestScreenState extends State<MyIdCompleteTestScreen> {
                   color: Colors.red[50],
                   padding: const EdgeInsets.all(16),
                   margin: const EdgeInsets.only(bottom: 24),
-                  child: Text(
-                    _errorMessage!,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.red[700], fontSize: 14),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '❌ Xato:',
+                          style: TextStyle(
+                            color: Colors.red[700],
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _errorMessage!,
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            color: Colors.red[700],
+                            fontSize: 13,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 

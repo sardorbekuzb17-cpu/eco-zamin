@@ -1,8 +1,4 @@
-const axios = require('axios');
-
-const CLIENT_ID = process.env.CLIENT_ID;
-const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const MYID_HOST = process.env.MYID_HOST;
+import axios from 'axios';
 
 export default async function handler(req, res) {
     // CORS sozlamalari
@@ -33,66 +29,54 @@ export default async function handler(req, res) {
             });
         }
 
-        console.log('📤 GET USER INFO: Foydalanuvchi ma\'lumotlari so\'rovi...');
+        console.log('📤 GET USER INFO: Foydalanuvchi ma\'lumotlari sorov...');
         console.log(`   Session ID: ${session_id}`);
         console.log(`   Code: ${code?.substring(0, 20)}...`);
 
-        // 1-JADVAL: Access token olish
-        const tokenResponse = await axios.post(
-            `${MYID_HOST}/oauth2/token`,
-            {
-                client_id: CLIENT_ID,
-                client_secret: CLIENT_SECRET,
-                grant_type: 'client_credentials',
-            },
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
-
-        const accessToken = tokenResponse.data.access_token;
-        console.log('✅ Access token olindi');
-
-        // 3-JADVAL: Foydalanuvchi ma\'lumotlari
-        const userResponse = await axios.post(
-            `${MYID_HOST}/api/v2/sdk/user-data`,
+        // MyID API'ga so'rov
+        const response = await axios.post(
+            `${process.env.MYID_HOST}/v2/sdk/user-data`,
             { code },
             {
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`,
                 },
+                timeout: 30000,
             }
         );
 
-        const profile = userResponse.data;
+        console.log('✅ GET USER INFO: Ma\'lumotlar olindi');
 
-        console.log('✅ GET USER INFO: Foydalanuvchi ma\'lumotlari olindi');
+        const userData = response.data;
 
         res.status(200).json({
             success: true,
+            session_id: session_id,
             profile: {
-                pinfl: profile.pinfl,
-                first_name: profile.name,
-                last_name: profile.surname,
-                birth_date: profile.birth_date,
-                gender: profile.gender,
-                phone_number: profile.phone_number,
-                email: profile.email,
-                passport_series: profile.passport_series,
-                passport_number: profile.passport_number,
+                first_name: userData.name || userData.first_name,
+                last_name: userData.surname || userData.last_name,
+                pinfl: userData.pinfl,
+                birth_date: userData.birth_date,
+                gender: userData.gender,
+                phone_number: userData.phone_number,
+                email: userData.email,
+                passport_series: userData.passport_series,
+                passport_number: userData.passport_number,
             },
-            reuid: profile.pinfl,
-            comparison_value: 0.95,
-            data: profile,
+            reuid: userData.reuid || session_id,
+            comparison_value: userData.comparison_value || 0.95,
+            data: userData,
         });
     } catch (error) {
-        console.error('❌ GET USER INFO XATOSI:', error.response?.status, error.response?.data || error.message);
+        console.error('❌ GET USER INFO XATOSI:');
+        console.error(`   Status: ${error.response?.status}`);
+        console.error(`   Data: ${JSON.stringify(error.response?.data)}`);
+        console.error(`   Message: ${error.message}`);
+
         res.status(error.response?.status || 500).json({
             success: false,
-            error: error.response?.data?.error_description || error.message,
+            error: error.response?.data?.error_description || error.response?.data?.error || error.message,
+            details: error.response?.data,
         });
     }
 }

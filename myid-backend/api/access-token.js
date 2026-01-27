@@ -1,12 +1,24 @@
-const axios = require('axios');
+export default async (req, res) => {
+    // CORS sozlamalari
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader(
+        'Access-Control-Allow-Headers',
+        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    );
 
-module.exports = async (req, res) => {
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+    }
+
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
-        console.log('📤 1-JADVAL: Access token so\'rovi...');
+        console.log('📤 ACCESS TOKEN: Token so\'rovi...');
 
         const { client_id, client_secret } = req.body;
 
@@ -40,7 +52,7 @@ module.exports = async (req, res) => {
             });
         }
 
-        console.log('✅ 1-JADVAL: Access token olindi');
+        console.log('✅ ACCESS TOKEN: Token olindi');
 
         res.json({
             success: true,
@@ -48,8 +60,8 @@ module.exports = async (req, res) => {
             expires_in: response.data.expires_in,
         });
     } catch (error) {
-        console.error('❌ 1-JADVAL XATOSI:', error.response?.data || error.message);
-        res.status(500).json({
+        console.error('❌ ACCESS TOKEN XATOSI:', error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({
             success: false,
             error: error.response?.data?.error_description || error.message,
         });

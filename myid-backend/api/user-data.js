@@ -1,6 +1,18 @@
-const axios = require('axios');
+export default async (req, res) => {
+    // CORS sozlamalari
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader(
+        'Access-Control-Allow-Headers',
+        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    );
 
-module.exports = async (req, res) => {
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+    }
+
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -15,10 +27,10 @@ module.exports = async (req, res) => {
             });
         }
 
-        console.log('📤 3-JADVAL: Foydalanuvchi ma\'lumotlari so\'rovi...');
+        console.log('📤 USER DATA: Foydalanuvchi ma\'lumotlari so\'rovi...');
 
         const response = await axios.post(
-            `${process.env.MYID_HOST}/api/v2/sdk/user-data`,
+            `${process.env.MYID_HOST}/v2/sdk/user-data`,
             { code },
             {
                 headers: {
@@ -30,37 +42,7 @@ module.exports = async (req, res) => {
 
         const profile = response.data;
 
-        const errors = [];
-
-        if (!profile.pinfl || profile.pinfl.length !== 14) {
-            errors.push('pinfl noto\'g\'ri format (14 ta belgi bo\'lishi kerak)');
-        }
-
-        if (!profile.name) {
-            errors.push('name majburiy');
-        }
-
-        if (!profile.surname) {
-            errors.push('surname majburiy');
-        }
-
-        if (!profile.birth_date) {
-            errors.push('birth_date majburiy');
-        }
-
-        if (!profile.gender || !['M', 'F'].includes(profile.gender)) {
-            errors.push('gender "M" yoki "F" bo\'lishi kerak');
-        }
-
-        if (errors.length > 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Validatsiya xatosi',
-                validation_errors: errors,
-            });
-        }
-
-        console.log('✅ 3-JADVAL: Foydalanuvchi ma\'lumotlari olindi');
+        console.log('✅ USER DATA: Foydalanuvchi ma\'lumotlari olindi');
 
         res.json({
             success: true,
@@ -77,8 +59,8 @@ module.exports = async (req, res) => {
             },
         });
     } catch (error) {
-        console.error('❌ 3-JADVAL XATOSI:', error.response?.data || error.message);
-        res.status(500).json({
+        console.error('❌ USER DATA XATOSI:', error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({
             success: false,
             error: error.response?.data?.error_description || error.message,
         });

@@ -1,6 +1,18 @@
-const axios = require('axios');
+export default async (req, res) => {
+    // CORS sozlamalari
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader(
+        'Access-Control-Allow-Headers',
+        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    );
 
-module.exports = async (req, res) => {
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+    }
+
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -15,10 +27,10 @@ module.exports = async (req, res) => {
             });
         }
 
-        console.log('📤 2-JADVAL: Session yaratish so\'rovi...');
+        console.log('📤 GET SESSION: Session ma\'lumotlarini olish sorov...');
 
         const response = await axios.post(
-            `${process.env.MYID_HOST}/api/v2/sdk/sessions`,
+            `${process.env.MYID_HOST}/v2/sdk/sessions`,
             {},
             {
                 headers: {
@@ -31,33 +43,7 @@ module.exports = async (req, res) => {
         const sessionId = response.data.session_id;
         const newAccessToken = response.data.access_token;
 
-        const errors = [];
-
-        if (!sessionId || sessionId.length !== 36) {
-            errors.push('session_id noto\'g\'ri format (36 ta belgi bo\'lishi kerak)');
-        }
-
-        if (!newAccessToken || newAccessToken.length < 512) {
-            errors.push('access_token noto\'g\'ri format (512+ ta belgi bo\'lishi kerak)');
-        }
-
-        if (!response.data.expires_in || response.data.expires_in <= 0) {
-            errors.push('expires_in noto\'g\'ri (musbat son bo\'lishi kerak)');
-        }
-
-        if (response.data.token_type !== 'Bearer') {
-            errors.push('token_type "Bearer" bo\'lishi kerak');
-        }
-
-        if (errors.length > 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Validatsiya xatosi',
-                validation_errors: errors,
-            });
-        }
-
-        console.log('✅ 2-JADVAL: Session yaratildi');
+        console.log('✅ GET SESSION: Session ma\'lumotlari olindi');
 
         res.json({
             success: true,
@@ -67,8 +53,8 @@ module.exports = async (req, res) => {
             token_type: response.data.token_type,
         });
     } catch (error) {
-        console.error('❌ 2-JADVAL XATOSI:', error.response?.data || error.message);
-        res.status(500).json({
+        console.error('❌ GET SESSION XATOSI:', error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({
             success: false,
             error: error.response?.data?.error_description || error.message,
         });

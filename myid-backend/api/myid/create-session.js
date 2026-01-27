@@ -28,21 +28,44 @@ export default async function handler(req, res) {
         console.log(`   CLIENT_ID: ${CLIENT_ID?.substring(0, 20)}...`);
         console.log(`   MYID_HOST: ${MYID_HOST}`);
 
-        // Backend-to-Backend so'rov
-        // MyID API'ga to'g'ridan-to'g'ri sessiya yaratish so'rovini yuboramiz
-        const sessionResponse = await axios.post(
+        // URL variantlarini sinab ko'ramiz
+        const urls = [
             `${MYID_HOST}/api/v2/sdk/sessions`,
-            {
-                client_id: CLIENT_ID,
-                client_secret: CLIENT_SECRET,
-            },
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                timeout: 10000,
+            `${MYID_HOST}/api/v1/sdk/sessions`,
+            `${MYID_HOST}/sdk/sessions`,
+        ];
+
+        let sessionResponse;
+        let lastError;
+
+        for (const url of urls) {
+            try {
+                console.log(`   Sinab ko'rilmoqda: ${url}`);
+                sessionResponse = await axios.post(
+                    url,
+                    {
+                        client_id: CLIENT_ID,
+                        client_secret: CLIENT_SECRET,
+                    },
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        timeout: 10000,
+                    }
+                );
+                console.log(`   ✅ Muvaffaqiyatli: ${url}`);
+                break;
+            } catch (error) {
+                lastError = error;
+                console.log(`   ❌ Xato (${error.response?.status}): ${url}`);
+                console.log(`      ${error.response?.data?.error || error.message}`);
             }
-        );
+        }
+
+        if (!sessionResponse) {
+            throw lastError;
+        }
 
         const sessionId = sessionResponse.data.session_id;
         const accessToken = sessionResponse.data.access_token;
